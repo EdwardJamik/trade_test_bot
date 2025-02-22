@@ -1,0 +1,9 @@
+.list .items{
+    /*border-top: 2px solid #C99C48;*/
+    margin-top: 40px;
+    /*padding-top: 20px;*/
+}
+
+.list .items > div{
+    color: #fff;
+}

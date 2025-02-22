@@ -1,0 +1,14 @@
+.list .items{
+    /*border-top: 2px solid #C99C48;*/
+    margin-top: 40px;
+    /*padding-top: 20px;*/
+}
+
+.list .items > div{
+    color: #fff;
+}
+
+.custom-float-btn .ant-float-btn-body{
+    background-color: #111 !important;
+    border: 1px solid #C99C48;
+}

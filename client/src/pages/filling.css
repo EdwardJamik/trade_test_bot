@@ -1,0 +1,60 @@
+.filling{
+    flex: 4;
+    padding: 15px;
+}
+
+.filling h3{
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+.filling .fixed_container{
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    display: flex;
+    justify-content: end;
+    padding: 5px 20px;
+}
+
+.filling .button__save{
+    background: #fff;
+    padding: 10px;
+    color: #231F20;
+
+    border-color: #231F20;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+}
+
+.filling .button__save:hover{
+    background: #fff;
+    padding: 10px;
+    color: #231F20;
+
+    border-color: #231F20;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+}
+
+.filling .textarea__filling{
+    display: flex;
+    margin: 0 auto 25px;
+    max-width: 800px;
+
+}
+
+.fillingWidgets{
+    display: flex;
+    margin: 20px;
+}
