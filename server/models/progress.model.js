@@ -1,40 +1,36 @@
 const mongoose = require("mongoose");
 
-const telegramUserScheme = new mongoose.Schema({
+const UserProgressScheme = new mongoose.Schema({
     chat_id: {
         type: String,
-        required: true,
-        unique:true,
+        required: true
     },
-    username:{
+    module_id:{
         type: String,
     },
-    first_name:{
+    task:{
         type: String,
     },
-    last_name:{
-        type: String,
+    task_send:{
+        type: Date,
     },
-    phone:{
+    test:{
         type: String,
         required: false,
         default:null,
     },
-    points:{
+    test_send:{
+        type: Date,
+    },
+    point:{
         type: Number,
         default: 0
     },
-    ban:{
+    confirm:{
         type: Boolean,
-        default:false,
-    },
-    action:{
-        type: String,
+        default: false,
     },
     last_message:{
-        type: String
-    },
-    language:{
         type: String
     },
     createdAt: {
@@ -47,6 +43,6 @@ const telegramUserScheme = new mongoose.Schema({
     },
 },{ timestamps: true })
 
-const UserList = mongoose.model("Users", telegramUserScheme);
+const UserProgress = mongoose.model("UserProgress", UserProgressScheme);
 
-module.exports = UserList;
+module.exports = UserProgress;

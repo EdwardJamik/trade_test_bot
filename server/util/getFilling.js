@@ -10,4 +10,15 @@ async function getFillingText(code) {
     return fillingRecord.filling;
 }
 
+async function getFillingCode  (filling){
+    try {
+        const {code} = await Filling.findOne({ filling });
+        return code;
+    } catch (e) {
+        console.log(e)
+    }
+}
+
 module.exports.getFillingText = getFillingText
+module.exports.getFillingCode = getFillingCode
+
