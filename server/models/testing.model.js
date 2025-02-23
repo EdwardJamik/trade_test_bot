@@ -5,15 +5,8 @@ const TestingList = new mongoose.Schema({
         type: String,
         required: true
     },
-    tests:{
+    questions:{
         type: Array,
-    },
-    created_user: {
-        type: String,
-        required: true
-    },
-    updated_user: {
-        type: String,
     },
     createdAt: {
         type: Date,

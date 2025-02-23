@@ -16,6 +16,9 @@ const moduleList = new mongoose.Schema({
     photo:{
         type: String
     },
+    video:{
+        type: Array
+    },
     other_files:{
         type: Array,
         default:null
@@ -24,7 +27,7 @@ const moduleList = new mongoose.Schema({
         type: String,
     },
     task_id:{
-        type: String,
+        type: Array,
     },
     createdAt: {
         type: Date,

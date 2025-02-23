@@ -1,31 +1,51 @@
-import React, {useState} from 'react';
-import {EditOutlined, EllipsisOutlined, PlusOutlined, SettingOutlined} from '@ant-design/icons';
-import {FloatButton, List} from 'antd';
-const data = [
-    {
-        title: 'Ant Design Title 1',
-    },
-    {
-        title: 'Ant Design Title 2',
-    },
-    {
-        title: 'Ant Design Title 3',
-    },
-    {
-        title: 'Ant Design Title 4',
-    },
-];
+import React, {useEffect, useState} from 'react';
+import { PlusOutlined} from '@ant-design/icons';
+import {FloatButton, List, message} from 'antd';
+
 import './testList.css'
 import {Link} from "react-router-dom";
-const actions = [
-    <EditOutlined key="edit" />,
-    <SettingOutlined key="setting" />,
-    <EllipsisOutlined key="ellipsis" />,
-];
+import axios from "axios";
+import {url} from "../../Config.jsx";
+
 
 const TestList = () => {
 
     const [list, setList] = useState([{title:'Test',amount:1},{title:'Test',amount:3},{title:'test',amount:6},{title:'test',amount:2}]);
+
+    const getModule = async () => {
+        try {
+            const { data } = await axios.get(`${url}/api/v1/testing/all`);
+
+            if (data?.tests) {
+                setList(data?.tests)
+            }
+        } catch (error) {
+            console.error("Помилка завантаження модуля:", error);
+            message.error("Помилка завантаження модуля");
+        } finally {
+        }
+    };
+
+    const removeItemModule = async (id) => {
+        try {
+            const { data } = await axios.post(`${url}/api/v1/testing/remove/${id}`);
+
+            if (data?.tests) {
+                setList(data?.tests)
+
+                if(data?.success)
+                    message.success('Тест успішно видалено');
+            }
+        } catch (error) {
+            console.error("Помилка завантаження модуля:", error);
+        } finally {
+        }
+    };
+
+
+    useEffect(() => {
+        getModule();
+    }, []);
 
     return (
         <div className="list">
@@ -41,8 +61,16 @@ const TestList = () => {
 
                             <List.Item
                                 actions={[
-                                    <Link  to={'/tests/125125'}   key="list-loadmore-edit" style={{ color: 'white' }}>Редагувати</Link>,
-                                    <button key="list-loadmore-more" style={{ color: '#960019', backgroundColor:'transparent', border:'none',cursor:'pointer' }}>Видалити</button>
+                                    <Link to={`/tests/${item?._id}`} key="list-loadmore-edit"
+                                          style={{color: 'white'}}>Редагувати</Link>,
+                                    <button key="list-loadmore-more" style={{
+                                        color: '#960019',
+                                        backgroundColor: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                            onClick={()=>removeItemModule(item?._id)}
+                                    >Видалити</button>
                                 ]}
                             >
                                 <List.Item.Meta

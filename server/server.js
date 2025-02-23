@@ -28,9 +28,12 @@ app.use(cors({
 }));
 
 const supportFolder = path.join(__dirname, 'uploads/module');
-
+const supportFolderTest = path.join(__dirname, 'uploads/testing');
 
 app.use('/uploads/module', express.static(supportFolder));
+app.use('/uploads/testing', express.static(supportFolderTest));
+
+
 
 app.use("/api/v1/admin", require("./services/admin.router.js"));
 app.use("/api/v1/module", require("./services/module.router"));

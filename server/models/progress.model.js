@@ -9,15 +9,19 @@ const UserProgressScheme = new mongoose.Schema({
         type: String,
     },
     task:{
-        type: String,
+        type: Boolean,
+        default:false,
+    },
+    task_data:{
+        type: Array,
+        default:[],
     },
     task_send:{
         type: Date,
     },
     test:{
-        type: String,
-        required: false,
-        default:null,
+        type: Boolean,
+        default:false,
     },
     test_send:{
         type: Date,

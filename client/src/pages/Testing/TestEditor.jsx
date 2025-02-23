@@ -2,7 +2,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import DraggableList from "react-draggable-list";
 import { Button, Collapse, Form, Input, message, Radio, Upload, Space } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
-import { useParams } from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
+import {url} from "../../Config.jsx";
+import axios from "axios";
+import dayjs from "dayjs";
 
 const { Panel } = Collapse;
 
@@ -16,7 +19,8 @@ const initialData = [
         question: '',
         question_img: '',
         choices: ['Відповідь 1', 'Відповідь 2', 'Відповідь 3', 'Відповідь 4'],
-        answer: null
+        answer: null,
+        fileList: []
     }
 ];
 
@@ -25,42 +29,147 @@ const TestEditor = () => {
     const { id } = useParams();
     const containerRef = useRef();
     const [form] = Form.useForm();
+    const navigate = useNavigate();
 
     const _onListChange = (newList) => {
         setList(newList);
     };
 
     const addNewQuestion = () => {
+        // Зберігаємо поточні значення форми
+        const currentFormValues = form.getFieldsValue();
+
+        // Створюємо нове питання
         const newQuestion = {
             id: Math.max(...list.map(item => item.id)) + 1,
             question: '',
             question_img: '',
             choices: ['Відповідь 1', 'Відповідь 2', 'Відповідь 3', 'Відповідь 4'],
-            answer: null
+            answer: null,
+            fileList: []
         };
-        setList([...list, newQuestion]);
+
+        // Оновлюємо список, зберігаючи поточні значення
+        setList(prevList => [...prevList, newQuestion]);
+
+        // Відновлюємо значення форми для існуючих питань
+        setTimeout(() => {
+            const newFormValues = {};
+            Object.keys(currentFormValues).forEach(key => {
+                if (key !== `choices-${newQuestion.id}` && key !== `correctAnswer-${newQuestion.id}`) {
+                    newFormValues[key] = currentFormValues[key];
+                }
+            });
+            form.setFieldsValue(newFormValues);
+        }, 0);
     };
+
+    const updateQuestionFileList = (questionId, newFileList) => {
+        setList(prevList =>
+            prevList.map(item =>
+                item.id === questionId
+                    ? { ...item, fileList: newFileList }
+                    : item
+            )
+        );
+    };
+
+    const getModule = async () => {
+        try {
+            const { data } = await axios.get(`${url}/api/v1/testing/${id}`);
+
+            if (data?.module) {
+                const { title, questions } = data.module;
+
+                // Встановлюємо заголовок тесту
+                form.setFieldValue('title_test', title);
+
+                // Підготовка питань з файлами для стану
+                const questionsWithFiles = questions.map(question => {
+                    let fileList = [];
+                    if (question.photo) {
+                        fileList = [{
+                            uid: `-${question.id}`, // унікальний id для antd Upload
+                            name: question.photo, // ім'я файлу
+                            status: 'done',
+                            url: `${url}/uploads/testing/${question.photo}` // URL для перегляду
+                        }];
+                    }
+
+                    return {
+                        id: question.id,
+                        fileList,
+                        choices: question.choices,
+                        answer: question.correctAnswer
+                    };
+                });
+
+                // Оновлюємо стан списку питань
+                setList(questionsWithFiles);
+
+                // Встановлюємо значення для кожного питання
+                questions.forEach(question => {
+                    // Встановлюємо текст питання
+                    form.setFieldValue(`question-${question.id}`, question.question);
+
+                    // Встановлюємо варіанти відповідей
+                    form.setFieldValue(`choices-${question.id}`, question.choices);
+
+                    // Встановлюємо правильну відповідь
+                    form.setFieldValue(`correctAnswer-${question.id}`, question.correctAnswer);
+                });
+            }
+        } catch (error) {
+            console.error("Помилка завантаження модуля:", error);
+            message.error("Помилка завантаження модуля");
+        }
+    };
+
+    useEffect(() => {
+        if (id && id !== 'create') {
+            getModule();
+        }
+    }, [id]);
 
     const onFinish = async (values) => {
         try {
+            const formData = new FormData();
 
-            const questions = list.map((item) => {
+            formData.append('title', values?.title_test);
+
+            list.forEach((item, index) => {
+                // Додаємо фото якщо воно є
+                if (item.fileList?.[0]?.originFileObj) {
+                    formData.append(`question_photo_${item.id}`, item.fileList[0].originFileObj);
+                }
+
+                // Додаємо інші дані питання
                 const questionData = {
                     id: item.id,
                     question: values[`question-${item.id}`],
-                    photo: values[`photo-${item.id}`]?.[0]?.originFileObj,
                     choices: values[`choices-${item.id}`],
-                    correctAnswer: values[`correctAnswer-${item.id}`]
+                    correctAnswer: values[`correctAnswer-${item.id}`],
+                    // Додаємо флаг що показує чи потрібно зберегти старе фото
+                    keepPhoto: item.fileList?.length > 0 && !item.fileList[0]?.originFileObj
                 };
-                return questionData;
+
+                formData.append(`question_${item.id}`, JSON.stringify(questionData));
             });
 
-            const questionsList = {
-                title: values?.title_test,
-                questions
-            }
+            const endpoint = id === 'create'
+                ? `${url}/api/v1/testing/create`
+                : `${url}/api/v1/testing/update/${id}`;
 
-            console.log('Formatted Questions:', questionsList);
+            const { data } = await axios.post(endpoint, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            if (data?.success) {
+                message.success(id === 'create' ? 'Тест створено' : 'Тест оновлено');
+                setTimeout(() => {
+                    navigate(`/tests/${data?.id || id}`);
+                }, 1000);
+            }
 
         } catch (error) {
             console.error("Error:", error);
@@ -74,14 +183,28 @@ const TestEditor = () => {
         const [choices, setChoices] = useState(item.choices);
 
         useEffect(() => {
-            form.setFieldValue(`choices-${item.id}`, item.choices);
+            // Встановлюємо початкові значення тільки якщо поле ще не має значення
+            const currentChoices = form.getFieldValue(`choices-${item.id}`);
+            if (!currentChoices) {
+                form.setFieldValue(`choices-${item.id}`, item.choices);
+            }
         }, [item.id]);
 
-        const onChoiceChange = (value, index) => {
-            const newChoices = [...localChoices];
-            newChoices[index] = value;
-            setLocalChoices(newChoices);
-            form.setFieldValue(`choices-${item.id}`, newChoices);
+
+        const handlePhotoChange = ({ fileList }) => {
+            updateQuestionFileList(item.id, fileList);
+        };
+
+        const beforeUpload = (file) => {
+            const isImage = file.type.startsWith('image/');
+            if (!isImage) {
+                message.error('You can only upload image files!');
+            }
+            const isLt2M = file.size / 1024 / 1024 < 2;
+            if (!isLt2M) {
+                message.error('Image must smaller than 2MB!');
+            }
+            return false; // Prevent automatic upload
         };
 
         return (
@@ -133,13 +256,17 @@ const TestEditor = () => {
                                 >
                                     <Upload
                                         listType="picture-card"
-                                        beforeUpload={() => false}
+                                        fileList={item.fileList}
+                                        beforeUpload={beforeUpload}
+                                        onChange={handlePhotoChange}
                                         maxCount={1}
                                     >
-                                        <button style={{ border: 0, background: "none" }} type="button">
-                                            <PlusOutlined />
-                                            <div style={{ marginTop: 8 }}>Upload</div>
-                                        </button>
+                                        {item.fileList.length >= 1 ? null : (
+                                            <button style={{border: 0, background: "none"}} type="button">
+                                                <PlusOutlined/>
+                                                <div style={{marginTop: 8}}>Upload</div>
+                                            </button>
+                                        )}
                                     </Upload>
                                 </Form.Item>
 
