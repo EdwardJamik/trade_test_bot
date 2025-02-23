@@ -112,8 +112,7 @@ bot.on('text', async (ctx) => {
             await getFillingText('help_result_text'),{
                 protect_content: true,
                 ... Markup.keyboard([
-                    [await getFillingText('modules_button'), await getFillingText('resources_button')],
-                    [await getFillingText('help_button')],
+                    [await getFillingText('modules_button'), await getFillingText('resources_button')]
                 ]).resize()
             }
         ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id }) });
@@ -124,7 +123,7 @@ bot.on('text', async (ctx) => {
             await getFillingText('resource_result_text'),{
                 protect_content: true,
                 ... Markup.keyboard([
-                    [await getFillingText('modules_button'), await getFillingText('resources_button')],
+                    [await getFillingText('modules_button')],
                     [await getFillingText('help_button')],
                 ]).resize()
             }
@@ -145,6 +144,15 @@ bot.on('text', async (ctx) => {
                     i++
                  } else{
 
+                    // console.log(module_item?.other_files[0])
+                    // module_item?.other_files[0]
+                    // await ctx.sendVideo({
+                    //     url: 'https://98e1-31-172-136-3.ngrok-free.app/uploads/module/34c1d528-67ef-44ed-b16e-d052dd3c2d1d.mp4',
+                    //     // Опціонально можна додати:
+                    //     caption: 'Опис відео',
+                    //     supports_streaming: true
+                    // });
+                    // ctx.sendVideo('https://98e1-31-172-136-3.ngrok-free.app/uploads/module/c0a25e5d-106f-4eb4-aa3f-f0d35d7272a7.mp4');
                     return ctx.replyWithHTML(
                         module_item?.message,{
                             protect_content: true,
@@ -155,6 +163,7 @@ bot.on('text', async (ctx) => {
                             ]),
                         }
                     ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id }) });
+
                 }
             }
         }
