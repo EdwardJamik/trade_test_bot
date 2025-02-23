@@ -280,6 +280,9 @@ bot.on('callback_query', async (ctx) => {
                 ctx.answerCbQuery('')
                 break;
             case 'get_module_file_button': {
+                ctx.deleteMessage().catch((e)=>{})
+                ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
+
                 const findModule = await Module.findOne({_id: callback_2})
 
                 if(findModule?.video?.length){
@@ -295,6 +298,24 @@ bot.on('callback_query', async (ctx) => {
                         })
                     }
                 }
+
+                const module_item = findModule
+                const findUserProgress = await UserProgress.findOne({chat_id, module_id: module_item?._id})
+
+                ctx.replyWithHTML(
+                    await getFillingText('get_module_other_file_text'),
+                    {
+                        protect_content: true,
+                        ...Markup.inlineKeyboard([
+                            [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                            module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
+                            // ...practiceButtonRows, // Spread the practice buttons
+                            [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
+                        ]),
+                    }
+                ).then(async (response) => {
+                    await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                });
 
                 ctx.answerCbQuery('')
                 break;
