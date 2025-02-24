@@ -26,7 +26,11 @@ const telegramUserScheme = new mongoose.Schema({
     },
     ban:{
         type: Boolean,
-        default:false,
+        default: false,
+    },
+    user_ban:{
+        type: Boolean,
+        default: false,
     },
     action:{
         type: String,

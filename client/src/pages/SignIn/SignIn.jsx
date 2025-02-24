@@ -8,8 +8,8 @@ import {
   Input,
   message, ConfigProvider
 } from "antd";
-import Logo from '../assets/images/logo.png'
-import {url} from "../Config.jsx";
+import Logo from '../../assets/images/logo.png'
+import {url} from "../../Config.jsx";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 

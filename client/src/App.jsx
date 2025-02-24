@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
-import Home from "./pages/Home.jsx";
-import SignIn from "./pages/SignIn.jsx";
+import Home from "./pages/Home/Home.jsx";
+import SignIn from "./pages/SignIn/SignIn.jsx";
 import Main from "./components/layout/Main.jsx";
 import "antd/dist/reset.css";
 
@@ -8,15 +8,19 @@ import "./assets/styles/main.css";
 import "./assets/styles/responsive.css";
 import {Suspense} from "react";
 import {ProtectedRoute} from "./ProtectedRoute.jsx";
-import Filling from "./pages/Filling.jsx";
+import Filling from "./pages/Filling/Filling.jsx";
 
-import TelegramUsers from "./pages/TelegramUsers/TelegramUsers.jsx";
-import Support from "./pages/Support/Support.jsx";
-import Chat from "./pages/Support/Chat.jsx";
 import TestList from "./pages/Testing/TestList.jsx";
 import TestEditor from "./pages/Testing/TestEditor.jsx";
 import Modules from "./pages/Modules/Modules.jsx";
 import ModuleEditor from "./pages/Modules/ModuleEditor.jsx";
+import PracticalList from "./pages/Practical/PracticalList.jsx";
+import PracticalEditor from "./pages/Practical/PracticalEditor.jsx";
+import GalleryList from "./pages/Gallery/GalleryList.jsx";
+import Users from "./pages/Users/Users.jsx";
+import SendingList from "./pages/Sending/SendingList.jsx";
+import UserPage from "./pages/Admin/UserPage.jsx";
+import LeaderBoard from "./pages/LeaderBoard/LeaderBoard.jsx";
 
 function App() {
     const routes = [
@@ -33,16 +37,8 @@ function App() {
             element: <ProtectedRoute element={<Main><Filling/></Main>}/>,
         },
         {
-            link: '/userTelegram',
-            element: <ProtectedRoute element={<Main><TelegramUsers/></Main>}/>,
-        },
-        {
-            link: '/support',
-            element: <ProtectedRoute element={<Main><Support/></Main>}/>,
-        },
-        {
-            link: '/chat/:id',
-            element: <ProtectedRoute element={<Main><Chat/></Main>}/>,
+            link: '/users',
+            element: <ProtectedRoute element={<Main><Users/></Main>}/>,
         },
         {
             link: '/tests',
@@ -61,13 +57,33 @@ function App() {
             element: <ProtectedRoute element={<Main><ModuleEditor/></Main>}/>,
         },
         {
+            link: '/practical',
+            element: <ProtectedRoute element={<Main><PracticalList/></Main>}/>,
+        },
+        {
+            link: '/practical/:id',
+            element: <ProtectedRoute element={<Main><PracticalEditor/></Main>}/>,
+        },
+        {
+            link: '/videolibraries',
+            element: <ProtectedRoute element={<Main><GalleryList/></Main>}/>,
+        },
+        {
+            link: '/mailing',
+            element: <ProtectedRoute element={<Main><SendingList/></Main>}/>,
+        },
+        {
+            link: '/admins',
+            element: <ProtectedRoute element={<Main><UserPage/></Main>}/>,
+        },
+        {
+            link: '/leaderboard',
+            element: <ProtectedRoute element={<Main><LeaderBoard/></Main>}/>,
+        },
+        {
             link: '*',
             element: <ProtectedRoute element={<Main><Home/></Main>}/>,
-        },
-        // {
-        //     link: '/',
-        //     element: <ProtectedRoute element={<Dashboard />} />,
-        // }
+        }
     ];
     return (
         <div className="App">

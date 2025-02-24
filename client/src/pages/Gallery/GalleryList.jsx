@@ -1,8 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import { PlusOutlined} from '@ant-design/icons';
-import {FloatButton, List, message} from 'antd';
+import {List, message} from 'antd';
 
-import './testList.css'
+import './galleryList.css'
 import {Link} from "react-router-dom";
 import axios from "axios";
 import {url} from "../../Config.jsx";
@@ -13,49 +12,49 @@ import timezone from 'dayjs/plugin/timezone';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const TestList = () => {
+const GalleryList = () => {
 
     const [list, setList] = useState([{title:'Test',amount:1},{title:'Test',amount:3},{title:'test',amount:6},{title:'test',amount:2}]);
 
-    const getModule = async () => {
+    const getGallery = async () => {
         try {
-            const { data } = await axios.get(`${url}/api/v1/testing/all`);
+            const { data } = await axios.get(`${url}/api/v1/gallery/all`);
 
-            if (data?.tests) {
-                setList(data?.tests)
+            if (data?.gallery) {
+                setList(data?.gallery)
             }
         } catch (error) {
-            console.error("Помилка завантаження модуля:", error);
-            message.error("Помилка завантаження модуля");
+            console.error("Помилка завантаження відеотеки:", error);
+            message.error("Помилка завантаження відеотеки");
         } finally {
         }
     };
 
-    const removeItemModule = async (id) => {
+    const removeItemGallery = async (id) => {
         try {
-            const { data } = await axios.post(`${url}/api/v1/testing/remove/${id}`);
+            const { data } = await axios.post(`${url}/api/v1/gallery/remove/${id}`);
 
-            if (data?.tests) {
-                setList(data?.tests)
+            if (data?.gallery) {
+                setList(data?.gallery)
 
                 if(data?.success)
-                    message.success('Тест успішно видалено');
+                    message.success('Відео успішно видалено із відеотеки');
             }
         } catch (error) {
-            console.error("Помилка завантаження модуля:", error);
+            console.error("Помилка завантаження відеотеки:", error);
         } finally {
         }
     };
 
 
     useEffect(() => {
-        getModule();
+        getGallery();
     }, []);
 
     return (
         <div className="list">
 
-                <h2>Тести</h2>
+            <h2>Відеотека</h2>
             <div className="items">
                 <>
                     <List
@@ -66,7 +65,7 @@ const TestList = () => {
 
                             <List.Item
                                 actions={[
-                                    <Link to={`/tests/${item?._id}`} key="list-loadmore-edit"
+                                    <Link to={`/practical/${item?._id}`} key="list-loadmore-edit"
                                           style={{color: 'white'}}>Редагувати</Link>,
                                     <button key="list-loadmore-more" style={{
                                         color: '#960019',
@@ -74,13 +73,13 @@ const TestList = () => {
                                         border: 'none',
                                         cursor: 'pointer'
                                     }}
-                                            onClick={()=>removeItemModule(item?._id)}
+                                            onClick={()=>removeItemGallery(item?._id)}
                                     >Видалити</button>
                                 ]}
                             >
                                 <List.Item.Meta
                                     title={<a href="https://ant.design" style={{ color: 'white' }}>{item?.title}</a>}
-                                    description={<span style={{ color: 'white' }}>Питань: {item?.questions?.length} | Створено: {dayjs(item?.createdAt).tz("Europe/Kiev").format('DD.MM.YYYY HH:mm')} | Редаговано: {dayjs(item?.updatedAt).tz("Europe/Kiev").format('DD.MM.YYYY HH:mm')} </span>}
+                                    description={<span style={{ color: 'white' }}>Додано: {dayjs(item?.updatedAt).tz("Europe/Kiev").format('DD.MM.YYYY HH:mm')} </span>}
                                 />
                             </List.Item>
                         )}
@@ -88,16 +87,8 @@ const TestList = () => {
 
                 </>
             </div>
-            <FloatButton
-                shape="circle"
-                type="primary"
-                style={{ insetInlineEnd: 60, color: '#000' }}
-                href={'/tests/create'}
-                className="custom-float-btn"
-                icon={<PlusOutlined style={{color:'#C99C48'}}/>}
-            />
         </div>
     );
 };
 
-export default TestList;
+export default GalleryList;

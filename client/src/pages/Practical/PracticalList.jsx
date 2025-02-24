@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import { PlusOutlined} from '@ant-design/icons';
 import {FloatButton, List, message} from 'antd';
 
-import './testList.css'
+import './practicalList.css'
 import {Link} from "react-router-dom";
 import axios from "axios";
 import {url} from "../../Config.jsx";
@@ -13,49 +13,49 @@ import timezone from 'dayjs/plugin/timezone';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const TestList = () => {
+const PracticalList = () => {
 
     const [list, setList] = useState([{title:'Test',amount:1},{title:'Test',amount:3},{title:'test',amount:6},{title:'test',amount:2}]);
 
-    const getModule = async () => {
+    const getPractical = async () => {
         try {
-            const { data } = await axios.get(`${url}/api/v1/testing/all`);
+            const { data } = await axios.get(`${url}/api/v1/practical/all`);
 
-            if (data?.tests) {
-                setList(data?.tests)
+            if (data?.practical) {
+                setList(data?.practical)
             }
         } catch (error) {
-            console.error("Помилка завантаження модуля:", error);
-            message.error("Помилка завантаження модуля");
+            console.error("Помилка завантаження практичних завдань:", error);
+            message.error("Помилка завантаження практичних завдань");
         } finally {
         }
     };
 
-    const removeItemModule = async (id) => {
+    const removeItemPractical = async (id) => {
         try {
-            const { data } = await axios.post(`${url}/api/v1/testing/remove/${id}`);
+            const { data } = await axios.post(`${url}/api/v1/practical/remove/${id}`);
 
-            if (data?.tests) {
-                setList(data?.tests)
+            if (data?.practical) {
+                setList(data?.practical)
 
                 if(data?.success)
-                    message.success('Тест успішно видалено');
+                    message.success('Практичне завдання успішно видалено');
             }
         } catch (error) {
-            console.error("Помилка завантаження модуля:", error);
+            console.error("Помилка завантаження практичного завдання:", error);
         } finally {
         }
     };
 
 
     useEffect(() => {
-        getModule();
+        getPractical();
     }, []);
 
     return (
         <div className="list">
 
-                <h2>Тести</h2>
+                <h2>Практичні завдання</h2>
             <div className="items">
                 <>
                     <List
@@ -66,7 +66,7 @@ const TestList = () => {
 
                             <List.Item
                                 actions={[
-                                    <Link to={`/tests/${item?._id}`} key="list-loadmore-edit"
+                                    <Link to={`/practical/${item?._id}`} key="list-loadmore-edit"
                                           style={{color: 'white'}}>Редагувати</Link>,
                                     <button key="list-loadmore-more" style={{
                                         color: '#960019',
@@ -74,7 +74,7 @@ const TestList = () => {
                                         border: 'none',
                                         cursor: 'pointer'
                                     }}
-                                            onClick={()=>removeItemModule(item?._id)}
+                                            onClick={()=>removeItemPractical(item?._id)}
                                     >Видалити</button>
                                 ]}
                             >
@@ -92,7 +92,7 @@ const TestList = () => {
                 shape="circle"
                 type="primary"
                 style={{ insetInlineEnd: 60, color: '#000' }}
-                href={'/tests/create'}
+                href={'/practical/create'}
                 className="custom-float-btn"
                 icon={<PlusOutlined style={{color:'#C99C48'}}/>}
             />
@@ -100,4 +100,4 @@ const TestList = () => {
     );
 };
 
-export default TestList;
+export default PracticalList;

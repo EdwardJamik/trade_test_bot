@@ -6,6 +6,7 @@ const Gallery = require("../models/gallery.model");
 const UserProgress = require("../models/progress.model");
 const Module = require("../models/module.model");
 const Testing = require("../models/testing.model");
+const Mailing = require("../models/sending.model");
 const {getLastMessage} = require("../util/lastMessage");
 // const getCreatedUser = require("../util/getCreatedUser");
 const { TG_TOKEN } = process.env
@@ -249,8 +250,10 @@ bot.on('video', async (ctx) => {
         const video = ctx.message.video;
         const chat_id = ctx.message.from.id;
 
-        const name_video = `Video ${dayjs().format('DD.MM.YYYY HH:mm')}`
+        const fileName = video?.file_name
+        const name_video = fileName ? fileName.split('.').slice(0, -1).join('.') : `Video ${dayjs().format('DD.MM.YYYY HH:mm')}`;
 
+        console.log(ctx.message)
         ctx.replyWithHTML(
             `Відео успішно збережено в бібліотеці: ${name_video}\n\n<b>Не видаляйте відео із чата!!!</b>\n\nЩоб завантажити відео, введіть команду знову!`,{
                 protect_content: true
@@ -288,7 +291,7 @@ bot.on('callback_query', async (ctx) => {
                 if(findModule?.video?.length){
                     for(const objectModule of findModule?.video){
                         const galleryItem = await Gallery.findOne({_id:objectModule})
-                        ctx.replyWithVideo(galleryItem?.file_id,{
+                        await ctx.replyWithVideo(galleryItem?.file_id,{
                             caption: galleryItem?.title,
                             protect_content: true,
                             ... Markup.keyboard([
@@ -723,130 +726,112 @@ bot.on('callback_query', async (ctx) => {
 })
 
 
-async function sendUserMessages (text,users,photo,video,id){
-    const {DOMAIN} = process.env
-    let counter = 0
-    let countTelegram = users?.length ? users?.length : 0
+async function sendUserMessages (id){
+    try {
+        let counter = 0
 
-    await Sending.updateOne({_id:id}, {
-        sending_start: true,
-        sending_telegram: counter,
-        un_sending_telegram: countTelegram
-    })
+        const findMailing = await Mailing.findOne({_id:id})
 
-    if (photo === null && video === null && users) {
-        for (const user of users) {
-            const {chat_id,language} = user;
-            try {
-                if(text.en && language === 'en') {
-                    const sending = await bot.telegram.sendMessage(chat_id, text.en, {
-                        parse_mode: 'HTML'
-                    });
+        if(findMailing){
 
-                    if (sending?.chat?.id) {
-                        counter++
-                    }
-                } else if(text.ru && language === 'ru'){
-                    const sending = await bot.telegram.sendMessage(chat_id, text.ru, {
-                        parse_mode: 'HTML'
-                    });
+            await Mailing.updateOne({_id: id}, {
+                start_send: true
+            })
 
-                    if (sending?.chat?.id) {
-                        counter++
-                    }
-                }
-            } catch (e) {
-                console.error(e)
-            }
-        }
-    } else if (photo !== null && video === null && users) {
-        for (const user of users) {
-            const {chat_id,language} = user;
+            const findUsers = await User.distinct('chat_id',{user_ban:false, ban:false})
 
-            if (text !== '' && text !== null) {
-                try {
-                    if (text.en && language === 'en') {
-                        const sending = await bot.telegram.sendPhoto(chat_id, `${DOMAIN}/sending/${photo}`, {
-                            caption: text.en,
-                            parse_mode: 'HTML'
-                        });
-
-                        if (sending?.chat?.id) {
-                            counter++
-                        }
-                    } else if (text.ru && language === 'ru') {
-                        const sending = await bot.telegram.sendPhoto(chat_id, `${DOMAIN}/sending/${photo}`, {
-                            caption: text.ru,
-                            parse_mode: 'HTML'
-                        });
+            if(findUsers){
+                if(!findMailing?.file){
+                    for(const user of findUsers){
+                        const sending = await bot.telegram.sendMessage(user, findMailing?.message, {
+                            parse_mode: 'HTML',
+                            protect_content: true,
+                            ... Markup.keyboard([
+                                [await getFillingText('modules_button'), await getFillingText('resources_button')],
+                                [await getFillingText('help_button')],
+                            ]).resize()
+                        })
 
                         if (sending?.chat?.id) {
                             counter++
                         }
                     }
-                } catch (e) {
-                    console.error(e)
+                } else if(isImageOrVideo(findMailing?.file) === 'image'){
+                    for(const user of findUsers){
+                        const sending = await bot.telegram.sendPhoto(user, `${process.env.API_URL}/uploads/mailing/${findMailing?.file}`, {
+                            parse_mode: 'HTML',
+                            caption:`${findMailing?.message}`,
+                            protect_content: true,
+                            ... Markup.keyboard([
+                                [await getFillingText('modules_button'), await getFillingText('resources_button')],
+                                [await getFillingText('help_button')],
+                            ]).resize()
+                        })
+
+                        if (sending?.chat?.id) {
+                            counter++
+                        }
+                    }
+                } else if(isImageOrVideo(findMailing?.file) === 'video'){
+                    for(const user of findUsers){
+                        const sending = await bot.telegram.sendVideo(user, `${process.env.API_URL}/uploads/mailing/${findMailing?.file}`, {
+                            parse_mode: 'HTML',
+                            caption:`${findMailing?.message}`,
+                            protect_content: true,
+                            ... Markup.keyboard([
+                                [await getFillingText('modules_button'), await getFillingText('resources_button')],
+                                [await getFillingText('help_button')],
+                            ]).resize()
+                        })
+
+                        if (sending?.chat?.id) {
+                            counter++
+                        }
+                    }
+                } else {
+                    const sending = await bot.telegram.sendMessage(user, findMailing?.message, {
+                        parse_mode: 'HTML',
+                        protect_content: true,
+                        ... Markup.keyboard([
+                            [await getFillingText('modules_button'), await getFillingText('resources_button')],
+                            [await getFillingText('help_button')],
+                        ]).resize()
+                    })
+
+                    if (sending?.chat?.id) {
+                        counter++
+                    }
                 }
+
+                await Mailing.updateOne({_id:id}, {
+                    sending_users: counter,
+                    confirm_send:true
+                })
             } else {
-                try {
-                    const sending = await bot.telegram.sendPhoto(chat_id, `${DOMAIN}/sending/${photo}`, {
-                        parse_mode: 'HTML'
-                    });
-                    if (sending?.chat?.id) {
-                        counter++
-                    }
-                } catch (e) {
-                    console.error(e)
-                }
+                await Mailing.updateOne({_id:id}, {
+                    sending_users: counter,
+                    confirm_send: true
+                })
             }
         }
-    } else if (photo === null && video !== null && users) {
-        for (const user of users) {
-            const {chat_id, language} = user;
 
-            if (text !== '' && text !== null) {
-                try {
-                    if (text.en && language === 'en') {
-                        const sending = await bot.telegram.sendVideo(chat_id, `${DOMAIN}/sending/${video}`, {
-                            caption: text.en,
-                            parse_mode: 'HTML'
-                        });
-                        if (sending?.chat?.id) {
-                            counter++
-                        }
-                    } else if (text.ru && language === 'ru') {
-                        const sending = await bot.telegram.sendVideo(chat_id, `${DOMAIN}/sending/${video}`, {
-                            caption: text.ru,
-                            parse_mode: 'HTML'
-                        });
-                        if (sending?.chat?.id) {
-                            counter++
-                        }
-                    }
+        function isImageOrVideo(fileName) {
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+            const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.flv', '.webm'];
 
-                } catch (e) {
-                    console.error(e)
-                }
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+
+            if (imageExtensions.includes(`.${fileExtension}`)) {
+                return 'image';
+            } else if (videoExtensions.includes(`.${fileExtension}`)) {
+                return 'video';
             } else {
-                try {
-                    const sending = await bot.telegram.sendVideo(chat_id, `${DOMAIN}/sending/${video}`, {
-                        parse_mode: 'HTML'
-                    });
-                    if (sending?.chat?.id) {
-                        counter++
-                    }
-                } catch (e) {
-                    console.error(e)
-                }
+                return 'unknown';
             }
         }
+    } catch (e){
+        console.error(e)
     }
-    await Sending.updateOne({_id:id
-    },{
-        sending_end: true,
-        sending_telegram: counter,
-        un_sending_telegram: countTelegram
-    })
 }
 
 module.exports.bot = bot

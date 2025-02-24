@@ -1,70 +1,36 @@
 const mongoose = require("mongoose");
 
-const SendingList = new mongoose.Schema({
+const MailingList = new mongoose.Schema({
     date: {
         type: Date,
     },
-    content:{
+    message:{
         type: String,
     },
-    image:{
-        type: Array,
+    file:{
+        type: String,
         default: null
     },
-    watch:{
-        type: Array,
-        default: null
-    },
-    viber:{
+    start_send:{
         type: Boolean,
-        default:false,
+        default: false,
     },
-    telegram:{
+    confirm_send:{
         type: Boolean,
-        default:false,
-    },
-    un_sending_viber:{
-        type: String,
-    },
-    sending_viber:{
-        type: String,
-    },
-    un_sending_telegram:{
-        type: String,
-    },
-    sending_telegram:{
-        type: String,
-    },
-    accepting_viber:{
-        type: Boolean,
-        default:false
-    },
-    accepting_telegram:{
-        type: Boolean,
-        default:false
+        default: false,
     },
     sending_users:{
-        type: Array,
-    },
-    type:{
-        type: Array,
-    },
-    type_sendings:{
-        type: String,
-    },
-    store_link:{
-        type: String,
+        type: Number,
+        default: 0
     },
     createdAt: {
         type: Date,
-        default: Date.now
     },
     updatedAt: {
         type: Date,
-        default: Date.now
     },
 },{ timestamps: true })
 
-const Sendings = mongoose.model("sending_list", SendingList);
+const Mailing = mongoose.model("mailing", MailingList);
 
-module.exports = Sendings;
+module.exports = Mailing;

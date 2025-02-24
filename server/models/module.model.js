@@ -14,10 +14,12 @@ const moduleList = new mongoose.Schema({
         required:true
     },
     photo:{
-        type: String
+        type: String,
+        default:null
     },
     video:{
-        type: Array
+        type: Array,
+        default: null
     },
     other_files:{
         type: Array,

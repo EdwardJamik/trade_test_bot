@@ -1,0 +1,23 @@
+.user {
+    flex: 4;
+    padding: 15px;
+    width: 100%;
+  }
+
+.user > .usersList {
+    overflow: scroll;
+}
+
+.user > div{
+    margin-bottom: 10px;
+}
+
+.alert_message{
+    margin-top: 10px;
+}
+
+.user .create_button{
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}

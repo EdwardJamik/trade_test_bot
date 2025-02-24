@@ -20,10 +20,12 @@ const ModuleEditor = () => {
     const { id } = useParams();
     const [fileList, setFileList] = useState([]);
     const [otherFileList, setOtherFileList] = useState([]);
+    const [isVideoList, setVideoList] = useState([]);
+    const [isTestList, setTestList] = useState([]);
+    const [isTaskList, setTaskList] = useState([]);
     const [form] = Form.useForm();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
-    const [existingFiles, setExistingFiles] = useState([]); // Додаємо стейт для існуючих файлів
+    const [existingFiles, setExistingFiles] = useState([]);
 
     const disabledDate = (current) => {
         return current && current.isBefore(dayjs(), "day");
@@ -55,7 +57,6 @@ const ModuleEditor = () => {
 
     const getModule = async () => {
         try {
-            setLoading(true);
             const { data } = await axios.get(`${url}/api/v1/module/${id}`);
 
             if (data?.module) {
@@ -64,6 +65,7 @@ const ModuleEditor = () => {
                     message: data.module.message,
                     test_id: data.module.test_id,
                     task_id: data.module.task_id,
+                    video: data.module.video,
                     date: dayjs(data.module.date),
                 });
 
@@ -73,8 +75,8 @@ const ModuleEditor = () => {
                         name: 'module-photo',
                         status: 'done',
                         url: `${url}/uploads/module/${data.module.photo}`,
-                        existing: true, // Позначаємо що це існуючий файл
-                        serverPath: data.module.photo // Зберігаємо шлях до файлу на сервері
+                        existing: true,
+                        serverPath: data.module.photo
                     };
                     setFileList([photoFile]);
                 }
@@ -85,11 +87,11 @@ const ModuleEditor = () => {
                         name: file.split('/').pop(),
                         status: 'done',
                         url: `${url}/uploads/module/${file}`,
-                        existing: true, // Позначаємо що це існуючий файл
-                        serverPath: file // Зберігаємо шлях до файлу на сервері
+                        existing: true,
+                        serverPath: file
                     }));
                     setOtherFileList(otherFiles);
-                    setExistingFiles(otherFiles); // Зберігаємо список існуючих файлів
+                    setExistingFiles(otherFiles);
                     form.setFieldsValue({ other_file: otherFiles });
                 }
             }
@@ -97,7 +99,22 @@ const ModuleEditor = () => {
             console.error("Помилка завантаження модуля:", error);
             message.error("Помилка завантаження модуля");
         } finally {
-            setLoading(false);
+        }
+    };
+
+    const getData = async () => {
+        try {
+            const { data } = await axios.get(`${url}/api/v1/module/data`);
+
+            if (data?.success) {
+                setVideoList(data?.video)
+                setTaskList(data?.task)
+                setTestList(data?.test)
+            }
+        } catch (error) {
+            console.error("Помилка завантаження модуля:", error);
+            message.error("Помилка завантаження модуля");
+        } finally {
         }
     };
 
@@ -105,13 +122,14 @@ const ModuleEditor = () => {
         if (id && id !== 'create') {
             getModule();
         }
+
+        getData()
     }, [id, form]);
 
     const onFinish = async (values) => {
         try {
             const formData = new FormData();
 
-            // Додаємо базові поля форм
             Object.keys(values).forEach((key) => {
                 if (key === 'date') {
                     formData.append(key, values[key].format());
@@ -120,14 +138,12 @@ const ModuleEditor = () => {
                 }
             });
 
-            // Додаємо головне фото
             if (fileList[0]?.originFileObj) {
                 formData.append("photo", fileList[0].originFileObj);
             } else if (fileList[0]?.existing) {
                 formData.append("existing_photo", fileList[0].serverPath);
             }
 
-            // Додаємо інші файли
             const existingFilePaths = [];
             otherFileList.forEach((file) => {
                 if (file.originFileObj) {
@@ -137,7 +153,6 @@ const ModuleEditor = () => {
                 }
             });
 
-            // Додаємо список існуючих файлів як окреме поле
             if (existingFilePaths.length > 0) {
                 formData.append("existing_files", JSON.stringify(existingFilePaths));
             }
@@ -224,7 +239,7 @@ const ModuleEditor = () => {
                                 rules={[{required: true, message: "Оберіть час відкриття модулю"}]}
                             >
                                 <DatePicker
-                                    style={{ width: "100%" }}
+                                    style={{width: "100%"}}
                                     showTime
                                     format="DD.MM.YYYY HH:mm"
                                     disabledDate={disabledDate}
@@ -244,22 +259,49 @@ const ModuleEditor = () => {
 
                     <h4>Оберіть тестування для модуля</h4>
                     <Form.Item name='test_id'>
-                        <Select>
-                            <Select.Option value="demo">Demo</Select.Option>
-                        </Select>
+                        <Select
+                            size={'middle'}
+                            placeholder="Оберіть тест"
+                            style={{
+                                width: '100%',
+                            }}
+                            allowClear
+                            options={isTestList}
+                        />
                     </Form.Item>
 
                     <h4>Оберіть практичне завдання модуля</h4>
                     <Form.Item name='task_id'>
-                        <Select>
-                            <Select.Option value="demo">Demo</Select.Option>
-                        </Select>
+                        <Select
+                            mode="tags"
+                            size={'middle'}
+                            placeholder="Оберіть практичне завдання"
+                            style={{
+                                width: '100%',
+                            }}
+                            defaultValue={[]}
+
+                            options={isTaskList}
+                        />
                     </Form.Item>
 
-                    <h4>Файли модуля (відео, фото, pdf)</h4>
+                    <h4>Оберіть відео із відеотеки</h4>
+                    <Form.Item name='video'>
+                        <Select
+                            mode="tags"
+                            size={'middle'}
+                            placeholder="Оберіть відео"
+                            style={{
+                                width: '100%',
+                            }}
+                            options={isVideoList}
+                        />
+                    </Form.Item>
+
+                    <h4>Файли модуля (фото, pdf)</h4>
                     <Form.Item
                         name='other_file'
-                        rules={[{ validator: validateOtherFiles }]}
+                        // rules={[{validator: validateOtherFiles}]}
                     >
                         <Upload
                             listType="picture-card"

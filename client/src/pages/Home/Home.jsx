@@ -1,6 +1,6 @@
 import {Button, Card, Col, Row, Statistic} from "antd";
 import axios from "axios";
-import {url} from "../Config.jsx";
+import {url} from "../../Config.jsx";
 import {useEffect, useState} from "react";
 import * as XLSX from "xlsx";
 

@@ -3,6 +3,9 @@ const router = require("express").Router();
 const uuid = require("uuid");
 const path = require('path');
 const Module = require("../models/module.model");
+const Gallery = require("../models/gallery.model");
+const Testing = require("../models/testing.model");
+const Practical = require("../models/practical.model");
 const fs = require("fs");
 
 const storage = multer.diskStorage({
@@ -38,12 +41,15 @@ router.post("/create", upload.fields([
         return res.status(400).json({error: "Файли не завантажено"});
     }
 
-    const {title, date, message, test_id, task_id} = req.body;
+    const {title, date, message, test_id, task_id, video} = req.body;
 
     const photo = req.files["photo"] ? req.files["photo"].map(file => `${file.filename}`) : []
     const other_files = req.files["other_file"] ? req.files["other_file"].map(file => `${file.filename}`) : []
 
-    const createModule = await Module.create({title, date, message, test_id, task_id, photo: photo[0], other_files })
+    const arrayTask = task_id.split(',')
+    const arrayVideo = video.split(',');
+
+    const createModule = await Module.create({title, date, message, test_id, video:arrayVideo, task_id:arrayTask, photo: photo[0], other_files })
 
     const response = {
         success: true,
@@ -66,12 +72,35 @@ router.get("/all", async (req, res) => {
     }
 });
 
+router.get("/data", async (req, res) => {
+    try {
+        const getVideo = await Gallery.find({});
+        const getTesting = await Testing.find({});
+        const getPractical = await Practical.find({});
+
+        const formatData = (data) => {
+            return data.map(item => ({
+                label: item.title,
+                value: item._id
+            }));
+        }
+
+        const video = formatData(getVideo);
+        const test = formatData(getTesting);
+        const task = formatData(getPractical);
+
+        res.json({ success: true, video, test, task});
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Помилка сервера" });
+    }
+});
+
 router.post("/update/:id", upload.fields([
     { name: "photo", maxCount: 1 },
     { name: "other_file", maxCount: 10 }
 ]), async (req, res) => {
     try {
-        const { title, date, message, test_id, task_id, existing_photo, existing_files } = req.body;
+        const { title, date, message, test_id, video, task_id, existing_photo, existing_files } = req.body;
 
         const currentModule = await Module.findById(req.params.id);
         if (!currentModule) {
@@ -114,14 +143,18 @@ router.post("/update/:id", upload.fields([
             });
         }
 
-        const updatedModule = await Module.findByIdAndUpdate(
-            req.params.id,
+        const arrayTask = task_id ? task_id.split(','): []
+        const arrayVideo = video ? video.split(',') : [];
+
+        const updatedModule = await Module.updateOne(
+            {_id: req.params.id},
             {
                 title,
                 date,
                 message,
                 test_id,
-                task_id,
+                video: arrayVideo,
+                task_id: arrayTask,
                 photo,
                 other_files
             },

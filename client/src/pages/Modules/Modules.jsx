@@ -13,7 +13,6 @@ import timezone from 'dayjs/plugin/timezone';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-
 const Modules = () => {
 
     const [list, setList] = useState([{title: 'Test', amount: 1}, {title: 'Test', amount: 3}, {
@@ -88,7 +87,7 @@ const Modules = () => {
                                     title={<a href="https://ant.design" style={{color: 'white'}}>{item?.title}</a>}
                                     description={<span
                                         style={{color: 'white'}}>
-                                          Тест: {item?.test_id !== undefined && item?.test_id !== 'undefined' ? '✅' : '❌'} | Практичне: {item?.task_id !== undefined && item?.task_id !== 'undefined' ? '✅' : '❌'} | Старт: {dayjs(item?.date).tz("Europe/Kiev").format('DD.MM.YYYY HH:mm')} | Створено: {dayjs(item?.createdAt).tz("Europe/Kiev").format('DD.MM.YYYY HH:mm')} | Редаговано: {dayjs(item?.updatedAt).tz("Europe/Kiev").format('DD.MM.YYYY HH:mm')} </span>}
+                                          Тест: {item?.test_id !== undefined && item?.test_id !== 'undefined' ? '✅' : '❌'} | Практичне: {item?.task_id !== undefined && item?.task_id !== 'undefined' && item?.task_id?.length ? '✅' : '❌'} | Старт: {dayjs(item?.date).tz("Europe/Kiev").format('DD.MM.YYYY HH:mm')} | Створено: {dayjs(item?.createdAt).tz("Europe/Kiev").format('DD.MM.YYYY HH:mm')} | Редаговано: {dayjs(item?.updatedAt).tz("Europe/Kiev").format('DD.MM.YYYY HH:mm')} </span>}
                                 />
                             </List.Item>
                         )}

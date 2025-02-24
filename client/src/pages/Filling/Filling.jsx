@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react'
 import "./filling.css"
 
 import axios from "axios";
-import {url} from "../Config";
+import {url} from "../../Config.jsx";
 import {Input, message,Button} from "antd";
 const { TextArea } = Input;
 

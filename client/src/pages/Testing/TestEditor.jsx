@@ -1,11 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import DraggableList from "react-draggable-list";
-import { Button, Collapse, Form, Input, message, Radio, Upload, Space } from "antd";
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import {Button, Collapse, Form, Input, message, Radio, Upload, Space, Popconfirm} from "antd";
+import {DeleteOutlined, MinusCircleOutlined, PlusOutlined} from "@ant-design/icons";
 import {useNavigate, useParams} from "react-router-dom";
 import {url} from "../../Config.jsx";
 import axios from "axios";
-import dayjs from "dayjs";
 
 const { Panel } = Collapse;
 
@@ -36,10 +35,8 @@ const TestEditor = () => {
     };
 
     const addNewQuestion = () => {
-        // Зберігаємо поточні значення форми
         const currentFormValues = form.getFieldsValue();
 
-        // Створюємо нове питання
         const newQuestion = {
             id: Math.max(...list.map(item => item.id)) + 1,
             question: '',
@@ -49,10 +46,8 @@ const TestEditor = () => {
             fileList: []
         };
 
-        // Оновлюємо список, зберігаючи поточні значення
         setList(prevList => [...prevList, newQuestion]);
 
-        // Відновлюємо значення форми для існуючих питань
         setTimeout(() => {
             const newFormValues = {};
             Object.keys(currentFormValues).forEach(key => {
@@ -62,6 +57,30 @@ const TestEditor = () => {
             });
             form.setFieldsValue(newFormValues);
         }, 0);
+    };
+
+    const deleteQuestion = (questionId) => {
+
+        if (list.length <= 1) {
+            message.warning('Тест повинен містити хоча б одне питання');
+            return;
+        }
+
+        setList(prevList => prevList.filter(item => item.id !== questionId));
+
+        const fieldsToRemove = [
+            `question-${questionId}`,
+            `choices-${questionId}`,
+            `correctAnswer-${questionId}`,
+            `photo-${questionId}`
+        ];
+
+        const currentValues = form.getFieldsValue();
+        fieldsToRemove.forEach(field => {
+            delete currentValues[field];
+        });
+
+        form.setFieldsValue(currentValues);
     };
 
     const updateQuestionFileList = (questionId, newFileList) => {
@@ -81,18 +100,16 @@ const TestEditor = () => {
             if (data?.module) {
                 const { title, questions } = data.module;
 
-                // Встановлюємо заголовок тесту
                 form.setFieldValue('title_test', title);
 
-                // Підготовка питань з файлами для стану
                 const questionsWithFiles = questions.map(question => {
                     let fileList = [];
                     if (question.photo) {
                         fileList = [{
-                            uid: `-${question.id}`, // унікальний id для antd Upload
-                            name: question.photo, // ім'я файлу
+                            uid: `-${question.id}`,
+                            name: question.photo,
                             status: 'done',
-                            url: `${url}/uploads/testing/${question.photo}` // URL для перегляду
+                            url: `${url}/uploads/testing/${question.photo}`
                         }];
                     }
 
@@ -104,18 +121,12 @@ const TestEditor = () => {
                     };
                 });
 
-                // Оновлюємо стан списку питань
                 setList(questionsWithFiles);
 
-                // Встановлюємо значення для кожного питання
                 questions.forEach(question => {
-                    // Встановлюємо текст питання
+
                     form.setFieldValue(`question-${question.id}`, question.question);
-
-                    // Встановлюємо варіанти відповідей
                     form.setFieldValue(`choices-${question.id}`, question.choices);
-
-                    // Встановлюємо правильну відповідь
                     form.setFieldValue(`correctAnswer-${question.id}`, question.correctAnswer);
                 });
             }
@@ -138,18 +149,16 @@ const TestEditor = () => {
             formData.append('title', values?.title_test);
 
             list.forEach((item, index) => {
-                // Додаємо фото якщо воно є
+
                 if (item.fileList?.[0]?.originFileObj) {
                     formData.append(`question_photo_${item.id}`, item.fileList[0].originFileObj);
                 }
 
-                // Додаємо інші дані питання
                 const questionData = {
                     id: item.id,
                     question: values[`question-${item.id}`],
                     choices: values[`choices-${item.id}`],
                     correctAnswer: values[`correctAnswer-${item.id}`],
-                    // Додаємо флаг що показує чи потрібно зберегти старе фото
                     keepPhoto: item.fileList?.length > 0 && !item.fileList[0]?.originFileObj
                 };
 
@@ -183,7 +192,6 @@ const TestEditor = () => {
         const [choices, setChoices] = useState(item.choices);
 
         useEffect(() => {
-            // Встановлюємо початкові значення тільки якщо поле ще не має значення
             const currentChoices = form.getFieldValue(`choices-${item.id}`);
             if (!currentChoices) {
                 form.setFieldValue(`choices-${item.id}`, item.choices);
@@ -204,7 +212,7 @@ const TestEditor = () => {
             if (!isLt2M) {
                 message.error('Image must smaller than 2MB!');
             }
-            return false; // Prevent automatic upload
+            return false;
         };
 
         return (
@@ -215,6 +223,8 @@ const TestEditor = () => {
                     backgroundColor: '#191919',
                     padding: '2px 6px',
                     width: '100%',
+                    display:'flex',
+                     alignItems:'center'
                 }}>
                     <div
                         className="dragHandle"
@@ -238,6 +248,21 @@ const TestEditor = () => {
                     >
                         {touchIcon}
                     </div>
+
+                    <Popconfirm
+                        title="Видалити питання?"
+                        description="Ви впевнені, що хочете видалити це питання?"
+                        onConfirm={() => deleteQuestion(item.id)}
+                        okText="Так"
+                        cancelText="Ні"
+                    >
+                        <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            style={{ marginRight: '8px' }}
+                        />
+                    </Popconfirm>
 
                     <Collapse
                         className="custom-collapse"
