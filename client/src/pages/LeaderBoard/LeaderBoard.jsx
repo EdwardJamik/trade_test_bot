@@ -166,11 +166,6 @@ const LeaderBoard = () => {
             ),
     });
 
-    const parseDateString = (dateString) => {
-        const [day, month, year, time] = dateString.split(/[\s.]+/);
-        const [hours, minutes] = time.split(':');
-        return new Date(year, month - 1, day, hours, minutes);
-    };
 
     const columns = [
         {
@@ -180,6 +175,14 @@ const LeaderBoard = () => {
             align:'center',
             sorter: (a, b) => Number(a.points) - Number(b.points),
             render: (text) => <h2 style={{fontSize:'20px'}}>{text}</h2>,
+        },
+        {
+            title: 'Поточний модуль',
+            dataIndex: 'title',
+            key: 'title',
+            align:'center',
+            sorter: (a, b) => Number(a.points) - Number(b.points),
+            render: (text) => <h2 style={{fontSize:'20px'}}>{text ? text : 'Не почато'}</h2>,
         },
         {
             title: 'Username',

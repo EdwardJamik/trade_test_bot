@@ -21,6 +21,7 @@ import Users from "./pages/Users/Users.jsx";
 import SendingList from "./pages/Sending/SendingList.jsx";
 import UserPage from "./pages/Admin/UserPage.jsx";
 import LeaderBoard from "./pages/LeaderBoard/LeaderBoard.jsx";
+import GalleryEditor from "./pages/Gallery/GalleryEditor.jsx";
 
 function App() {
     const routes = [
@@ -30,7 +31,7 @@ function App() {
         },
         {
             link: '/',
-            element:<ProtectedRoute element={<Main><Home/></Main>}/>,
+            element:<ProtectedRoute element={<Main><LeaderBoard/></Main>}/>,
         },
         {
             link: '/filling',
@@ -67,6 +68,10 @@ function App() {
         {
             link: '/videolibraries',
             element: <ProtectedRoute element={<Main><GalleryList/></Main>}/>,
+        },
+        {
+            link: '/videolibraries/:id',
+            element: <ProtectedRoute element={<Main><GalleryEditor/></Main>}/>,
         },
         {
             link: '/mailing',

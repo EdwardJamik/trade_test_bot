@@ -65,7 +65,7 @@ const GalleryList = () => {
 
                             <List.Item
                                 actions={[
-                                    <Link to={`/practical/${item?._id}`} key="list-loadmore-edit"
+                                    <Link to={`/videolibraries/${item?._id}`} key="list-loadmore-edit"
                                           style={{color: 'white'}}>Редагувати</Link>,
                                     <button key="list-loadmore-more" style={{
                                         color: '#960019',

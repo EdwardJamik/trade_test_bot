@@ -293,18 +293,6 @@ function Sidenav() {
                         </NavLink>
                     </Menu.Item>
                 )}
-
-                    <Menu.Item key="12">
-                        <NavLink to="/leaderboard">
-            <span
-                className="icon"
-            >
-              {leaderboard_icon}
-            </span>
-                            <span className="label">Статистика</span>
-                        </NavLink>
-                    </Menu.Item>
-
                 {userRoot && (
                     <Menu.Item key="13">
                         <NavLink to="/admins">
