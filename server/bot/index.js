@@ -7,7 +7,7 @@ const UserProgress = require("../models/progress.model");
 const Module = require("../models/module.model");
 const Testing = require("../models/testing.model");
 const Mailing = require("../models/sending.model");
-const {getLastMessage} = require("../util/lastMessage");
+const {getLastMessage,getLastTwoMessage} = require("../util/lastMessage");
 // const getCreatedUser = require("../util/getCreatedUser");
 const { TG_TOKEN } = process.env
 const bot = new Telegraf(`${TG_TOKEN}`)
@@ -423,6 +423,7 @@ bot.on('callback_query', async (ctx) => {
 
             case 'back_to_main_module': {
                 ctx.deleteMessage().catch((e) => {})
+                ctx.deleteMessage(await getLastTwoMessage(chat_id)).catch((e) => {})
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
 
                 const module_item = await Module.findOne({_id: callback_2})
@@ -482,7 +483,7 @@ bot.on('callback_query', async (ctx) => {
                 ctx.answerCbQuery('')
                 break;
             }
-            case 'test_start': {
+            case 'get_module_test_button': {
 
                 ctx.deleteMessage().catch((e) => {})
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
@@ -548,21 +549,55 @@ bot.on('callback_query', async (ctx) => {
                 if(amountQuestion === (Number(callback_3)+1)){
 
                     if(findTest?.questions[Number(callback_3)]?.correctAnswer === Number(callback_4)){
+
+                        ctx.deleteMessage(await getLastTwoMessage(chat_id)).catch((e) => {})
+
                         await UserProgress.updateOne(
                             { chat_id, module_id: callback_2 },
                             { $inc: { point: 1 } }
                         );
+
+                        const button_letters = ["A", "B", "C", "D"];
+
+                        let messageText = await getFillingText('answer_correct_text')
+                        messageText = messageText.replace(/\{user_answer\}/g, `${button_letters[findTest?.questions[Number(callback_3)]?.correctAnswer]}`)
+
+                        await ctx.replyWithHTML(
+                            messageText,
+                            {
+                                protect_content: true
+                            }
+                        ).then(async (response) => {
+                            await User.updateOne({ chat_id }, { last_two_message: response?.message_id, action: '' })
+                        });
+
+                    } else {
+                        ctx.deleteMessage(await getLastTwoMessage(chat_id)).catch((e) => {})
+                        const button_letters = ["A", "B", "C", "D"];
+
+                        let messageText = await getFillingText('answer_declined_text')
+                        messageText = messageText.replace(/\{correct_answer\}/g, `${button_letters[findTest?.questions[Number(callback_3)]?.correctAnswer]} - ${findTest?.questions[Number(callback_3)]?.choices[Number(findTest?.questions[Number(callback_3)]?.correctAnswer)]}`)
+
+                        await ctx.replyWithHTML(
+                            messageText,
+                            {
+                                protect_content: true
+                            }
+                        ).then(async (response) => {
+                            await User.updateOne({ chat_id }, { last_two_message: response?.message_id, action: '' })
+                        });
                     }
 
                     const getPointUser = await UserProgress.findOne(
                         { chat_id, module_id: callback_2 }
                     );
+
                     const finishText = await getFillingText('finish_test_point_text')
 
                     let result = finishText
                         .replace(/\{point\}/g, getPointUser?.point)
 
-                    ctx.replyWithHTML(
+                    await ctx.replyWithHTML(
                         result,
                         {
                             protect_content: true,
@@ -577,11 +612,45 @@ bot.on('callback_query', async (ctx) => {
 
                 } else{
 
-                    if(findTest?.questions[Number(callback_3)]?.correctAnswer === Number(callback_4)){
+                    if(Number(findTest?.questions[Number(callback_3)]?.correctAnswer) === Number(callback_4)){
+
+                        ctx.deleteMessage(await getLastTwoMessage(chat_id)).catch((e) => {})
+
                         await UserProgress.updateOne(
                             { chat_id, module_id: callback_2 },
                             { $inc: { point: 1 } }
                         );
+
+                        const button_letters = ["A", "B", "C", "D"];
+
+                        let messageText = await getFillingText('answer_correct_text')
+                        messageText = messageText.replace(/\{user_answer\}/g, `${button_letters[(findTest?.questions[Number(callback_3)]?.correctAnswer)]}`)
+
+                        await ctx.replyWithHTML(
+                            messageText,
+                            {
+                                protect_content: true
+                            }
+                        ).then(async (response) => {
+                            await User.updateOne({ chat_id }, { last_two_message: response?.message_id, action: '' })
+                        });
+
+                    } else {
+
+                        ctx.deleteMessage(await getLastTwoMessage(chat_id)).catch((e) => {})
+                        const button_letters = ["A", "B", "C", "D"];
+
+                        let messageText = await getFillingText('answer_declined_text')
+                        messageText = messageText.replace(/\{correct_answer\}/g, `${button_letters[findTest?.questions[Number(callback_3)]?.correctAnswer]} - ${findTest?.questions[Number(callback_3)]?.choices[Number(findTest?.questions[Number(callback_3)]?.correctAnswer)]}`)
+
+                        await ctx.replyWithHTML(
+                            messageText,
+                            {
+                                protect_content: true
+                            }
+                        ).then(async (response) => {
+                            await User.updateOne({ chat_id }, { last_two_message: response?.message_id, action: '' })
+                        });
                     }
 
                     const questionText = await getFillingText('question_form_text')

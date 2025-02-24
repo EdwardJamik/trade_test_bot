@@ -38,6 +38,9 @@ const telegramUserScheme = new mongoose.Schema({
     last_message:{
         type: String
     },
+    last_two_message:{
+        type: String
+    },
     language:{
         type: String
     },

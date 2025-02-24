@@ -5,4 +5,10 @@ async function getLastMessage(chat_id) {
     return last_message
 }
 
+async function getLastTwoMessage(chat_id) {
+    const {last_two_message} = await User.findOne({chat_id},{last_two_message: true})
+    return last_two_message
+}
+
 module.exports.getLastMessage = getLastMessage
+module.exports.getLastTwoMessage = getLastTwoMessage
