@@ -182,7 +182,7 @@ const LeaderBoard = () => {
             key: 'title',
             align:'center',
             sorter: (a, b) => Number(a.points) - Number(b.points),
-            render: (text) => <h2 style={{fontSize:'20px'}}>{text ? text : 'Не почато'}</h2>,
+            render: (text) => <h2 style={{fontSize:'14px', fontWeight:'400', color:'#fff'}}>{text ? text : '-'}</h2>,
         },
         {
             title: 'Username',

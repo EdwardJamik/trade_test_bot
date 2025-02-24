@@ -224,11 +224,11 @@ const ModuleEditor = () => {
                         </div>
 
                         <div style={{width: '100%'}}>
-                            <h4>Заголовок модулю</h4>
+                            <h4>Заголовок модуля</h4>
                             <Form.Item
                                 name="title"
                                 style={{width: '100%'}}
-                                rules={[{required: true, message: "Введіть заголовок модулю"}]}
+                                rules={[{required: true, message: "Введіть заголовок модуля"}]}
                             >
                                 <Input/>
                             </Form.Item>
