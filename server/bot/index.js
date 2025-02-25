@@ -543,19 +543,15 @@ bot.on('callback_query', async (ctx) => {
 
                 const amountTest = findTest?.questions[0]?.choices?.length || 0;
                 const answerButtons = [];
-
-                const row = [
-                    // Markup.button.callback(`${button_letters[i]}`, `answer-${callback_2}-0-${i}`)
-                ];
-                for (let i = 0; i < amountTest; i++ ) {
-
-
+                for (let i = 0; i < amountTest; i += 2) {
+                    const row = [
+                        Markup.button.callback(`${button_letters[i]}`, `answer-${callback_2}-0-${i}`)
+                    ];
                     if (i + 1 < amountTest) {
-                        row.push(Markup.button.callback(`${button_letters[i + 1]}`, `answer-${callback_2}-0-${i}`));
+                        row.push(Markup.button.callback(`${button_letters[i + 1]}`, `answer-${callback_2}-0-${i + 1}`));
                     }
                     answerButtons.push(row);
                 }
-                console.log(answerButtons)
                 // const amountTest = findTest?.questions?.length
 
                 ctx.replyWithHTML(
