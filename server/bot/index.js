@@ -137,48 +137,50 @@ bot.on('text', async (ctx) => {
     //-1002452517593
     if(ctx?.message?.chat?.id && ctx?.message?.chat?.id === -1002452517593){
 
-        const text = ctx.message.reply_to_message.text;
+        const text = ctx?.message?.reply_to_message?.text;
 
-        const match = text.match(/chat_id:\s*([\d\+\-]+)/);
-        const id = text.match(/module_id:\s*([\w]+)/);
-        const practical = text.match(/practical:\s*([\w]+)/);
+        if(text) {
+            const match = text.match(/chat_id:\s*([\d\+\-]+)/);
+            const id = text.match(/module_id:\s*([\w]+)/);
+            const practical = text.match(/practical:\s*([\w]+)/);
 
-        if (match && match[1]) {
-            const chatId = match[1].trim(); // Видаляємо зайві пробіли
-            const match_id = id[1].trim(); // Видаляємо зайві пробіли
-            const match_practical = practical[1].trim(); // Видаляємо зайві пробіли
-            const messageText = ctx.message.text; // Текст відповіді
+            if (match && id && practical) {
+                const chatId = match[1].trim(); // Видаляємо зайві пробіли
+                const match_id = id[1].trim(); // Видаляємо зайві пробіли
+                const match_practical = practical[1].trim(); // Видаляємо зайві пробіли
+                const messageText = ctx.message.text; // Текст відповіді
 
-            const findModule = await Module.findOne({_id: match_id})
+                const findModule = await Module.findOne({_id: match_id})
 
-            const findProgress = await UserProgress.findOne({chat_id: chatId, module_id: match_id})
+                const findProgress = await UserProgress.findOne({chat_id: chatId, module_id: match_id})
 
-            let task_data = findProgress?.task_data || []; // Переконаємось, що це масив
-            task_data[match_practical] = true;
+                let task_data = findProgress?.task_data || []; // Переконаємось, що це масив
+                task_data[match_practical] = true;
 
-            let task = task_data.length > 0 && task_data.every(checkProgress => checkProgress === true);
+                let task = task_data.length > 0 && task_data.every(checkProgress => checkProgress === true);
 
-            try {
-                const messageMentor = await getFillingText('text_mentor_to_user')
-                let result = messageMentor
-                    .replace(/\{title\}/g, ` ${findModule?.title}`)
-                    .replace(/\{message\}/g, ` ${messageText}`);
-                await ctx.telegram.sendMessage(chatId, result,{
-                    ...Markup.inlineKeyboard([
-                        [Markup.button.callback(await getFillingText('back_to_main_module'), `back_to_main_module-${match_id}`)]
-                    ]),
-                });
-                await UserProgress.updateOne({chat_id:chatId, module_id: match_id},{task_data,task})
-                ctx.deleteMessage().catch((e)=>{})
-                console.log(await getLastMessage(chatId))
-                ctx.deleteMessage(chatId,await getLastMessage(chatId)).catch((e)=>{})
-                await ctx.reply(`Повідомлення надіслано до ${chatId}`);
-            } catch (error) {
-                console.error('Помилка надсилання повідомлення:', error);
-                await ctx.reply('Помилка: Не вдалося надіслати повідомлення.');
+                try {
+                    const messageMentor = await getFillingText('text_mentor_to_user')
+                    let result = messageMentor
+                        .replace(/\{title\}/g, ` ${findModule?.title}`)
+                        .replace(/\{message\}/g, ` ${messageText}`);
+                    await ctx.telegram.sendMessage(chatId, result, {
+                        ...Markup.inlineKeyboard([
+                            [Markup.button.callback(await getFillingText('back_to_main_module'), `back_to_main_module-${match_id}`)]
+                        ]),
+                    });
+                    await UserProgress.updateOne({chat_id: chatId, module_id: match_id}, {task_data, task})
+                    ctx.deleteMessage().catch((e) => {
+                    })
+                    console.log(await getLastMessage(chatId))
+                    ctx.deleteMessage(chatId, await getLastMessage(chatId)).catch((e) => {
+                    })
+                    await ctx.reply(`Повідомлення надіслано до ${chatId}`);
+                } catch (error) {
+                    console.error('Помилка надсилання повідомлення:', error);
+                    await ctx.reply('Помилка: Не вдалося надіслати повідомлення.');
+                }
             }
-        } else {
-            await ctx.reply('Не вдалося знайти chat_id у відповіді.');
         }
 
     } else {
@@ -580,7 +582,7 @@ bot.on('callback_query', async (ctx) => {
                         const message_id = findUserProgress?.task_data[Number(callback_3)-1].split(',');
                         const response = await ctx.telegram.sendMessage(
                             '-1002452517593',
-                            `Модуль: ${findModule?.title}\nUsername: @${getUser?.username}\nName: ${getUser?.first_name ? getUser?.first_name : ''} ${getUser?.last_name ? getUser?.last_name : ''}\nНомер телефону: ${getUser?.phone}\nchat_id: ${getUser?.chat_id}\nmodule_id:${findModule?._id}\npractical:${Number(callback_3)-1}\n\nЩоб надіслати фідбек користувачу, відповідайте на це повідомлення`,
+                            `Модуль: ${findModule?.title}\nUsername: @${getUser?.username ? getUser?.username : 'відсутній'} (${getUser?.first_name ? getUser?.first_name : ''} ${getUser?.last_name ? getUser?.last_name : ''}; ${getUser?.phone})\n\nchat_id: ${getUser?.chat_id} | module_id:${findModule?._id} | practical:${Number(callback_3)-1}`,
                             { parse_mode: 'HTML', protect_content: true }
                         );
 
