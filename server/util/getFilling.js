@@ -15,7 +15,7 @@ async function getFillingCode  (filling){
         const {code} = await Filling.findOne({ filling });
         return code;
     } catch (e) {
-        console.log(e)
+        // console.log(e)
     }
 }
 

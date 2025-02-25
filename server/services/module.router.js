@@ -13,8 +13,11 @@ const storage = multer.diskStorage({
         cb(null, './uploads/module');
     },
     filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, `${uuid.v4()}${ext}`);
+        // Отримуємо оригінальну назву файлу
+        const originalName = file.originalname;
+
+        // Зберігаємо файл з оригінальним іменем
+        cb(null, originalName);
     }
 });
 

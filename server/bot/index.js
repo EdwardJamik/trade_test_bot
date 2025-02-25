@@ -129,173 +129,423 @@ bot.on('text', async (ctx) => {
 
     const getMessageCode = await getFillingCode(text)
 
-    if (getMessageCode === 'help_button') {
-        ctx.deleteMessage().catch((e)=>{})
-        ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
-        ctx.replyWithHTML(
-            await getFillingText('help_result_text'),{
-                protect_content: true,
-                ... Markup.keyboard([
-                    [await getFillingText('modules_button'), await getFillingText('resources_button')]
-                ]).resize()
+    const userAction = await User.findOne({ chat_id })
+
+    const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
+    // console.log(callback, callback_2, callback_3, callback_4)
+
+    //-1002329684167
+    if(ctx?.message?.chat?.id && ctx?.message?.chat?.id === -1002329684167){
+
+        const text = ctx.message.reply_to_message.text;
+
+        const match = text.match(/chat_id:\s*([\d\+\-]+)/);
+        const id = text.match(/module_id:\s*([\w]+)/);
+        const practical = text.match(/practical:\s*([\w]+)/);
+
+        if (match && match[1]) {
+            const chatId = match[1].trim(); // Видаляємо зайві пробіли
+            const match_id = id[1].trim(); // Видаляємо зайві пробіли
+            const match_practical = practical[1].trim(); // Видаляємо зайві пробіли
+            const messageText = ctx.message.text; // Текст відповіді
+
+            const findModule = await Module.findOne({_id: match_id})
+
+            const findProgress = await UserProgress.findOne({chat_id: chatId, module_id: match_id})
+
+            let task_data = findProgress?.task_data || []; // Переконаємось, що це масив
+            task_data[match_practical] = true;
+
+            let task = task_data.length > 0 && task_data.every(checkProgress => checkProgress === true);
+
+            try {
+                const messageMentor = await getFillingText('text_mentor_to_user')
+                let result = messageMentor
+                    .replace(/\{title\}/g, ` ${findModule?.title}`)
+                    .replace(/\{message\}/g, ` ${messageText}`);
+                await ctx.telegram.sendMessage(chatId, result,{
+                    ...Markup.inlineKeyboard([
+                        [Markup.button.callback(await getFillingText('back_to_main_module'), `back_to_main_module-${match_id}`)]
+                    ]),
+                });
+                await UserProgress.updateOne({chat_id:chatId, module_id: match_id},{task_data,task})
+                ctx.deleteMessage().catch((e)=>{})
+                console.log(await getLastMessage(chatId))
+                ctx.deleteMessage(chatId,await getLastMessage(chatId)).catch((e)=>{})
+                await ctx.reply(`Повідомлення надіслано до ${chatId}`);
+            } catch (error) {
+                console.error('Помилка надсилання повідомлення:', error);
+                await ctx.reply('Помилка: Не вдалося надіслати повідомлення.');
             }
-        ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
-    } else if (getMessageCode === 'resources_button') {
-        ctx.deleteMessage().catch((e)=>{})
-        ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
-        ctx.replyWithHTML(
-            await getFillingText('resource_result_text'),{
-                protect_content: true,
-                ... Markup.keyboard([
-                    [await getFillingText('modules_button')],
-                    [await getFillingText('help_button')],
-                ]).resize()
+        } else {
+            await ctx.reply('Не вдалося знайти chat_id у відповіді.');
+        }
+
+    } else {
+        if(callback === 'getPractical') {
+            try {
+                // ctx.deleteMessage().catch((e) => {
+                // })
+                ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
+
+                const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
+                let task_data = []
+
+                if (findUserProgress?.task_data)
+                    task_data = [...findUserProgress?.task_data]
+
+                if (typeof task_data[Number(callback_3)-1] === 'string') {
+                    task_data[Number(callback_3)-1] += `,${ctx.message.message_id}`
+                }
+
+                else if (Array.isArray(task_data[Number(callback_3)-1])) {
+                    task_data[Number(callback_3)-1] = task_data[Number(callback_3)-1].join(',') + `,${ctx.message.message_id}`
+                }
+
+                else {
+                    task_data[Number(callback_3)-1] = `${ctx.message.message_id}`
+                }
+
+                await UserProgress.updateOne({chat_id, module_id: callback_2}, {task_data})
+
+                ctx.replyWithHTML(
+                    await getFillingText('text_practical_sent_info'), {
+                        protect_content: true,
+                        ...Markup.inlineKeyboard([
+                            [Markup.button.callback(await getFillingText('send_practical_to_mentor_button'), `success_sent_module_practical-${callback_2}-${callback_3}`)],
+                            [Markup.button.callback(await getFillingText('not_send_practical_to_mentor_button'), `decline_sent_module_practical-${callback_2}-${callback_3}`)],
+                        ]),
+                    }
+                ).then(async (response) => {
+                    await User.updateOne({chat_id}, {last_message: response?.message_id})
+                });
+            } catch (e) {
+                console.error(e)
             }
-        ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
-    } else if (getMessageCode === 'modules_button') {
-        ctx.deleteMessage().catch((e)=>{})
-        ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
 
-        const findModule = await Module.find({})
+        }
+        else if (getMessageCode === 'help_button') {
+            ctx.deleteMessage().catch((e)=>{})
+            ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
+            ctx.replyWithHTML(
+                await getFillingText('help_result_text'),{
+                    protect_content: true,
+                    ... Markup.keyboard([
+                        [await getFillingText('modules_button'), await getFillingText('resources_button')]
+                    ]).resize()
+                }
+            ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
+        } else if (getMessageCode === 'resources_button') {
+            ctx.deleteMessage().catch((e)=>{})
+            ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
+            ctx.replyWithHTML(
+                await getFillingText('resource_result_text'),{
+                    protect_content: true,
+                    ... Markup.keyboard([
+                        [await getFillingText('modules_button')],
+                        [await getFillingText('help_button')],
+                    ]).resize()
+                }
+            ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
+        } else if (getMessageCode === 'modules_button') {
+            ctx.deleteMessage().catch((e)=>{})
+            ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
 
-        if(findModule?.length){
-            let i = 0
-            for(const module_item of findModule){
+            const findModule = await Module.find({})
 
-                const findUserProgress = await UserProgress.findOne({chat_id, module_id: module_item?._id})
+            if(findModule?.length){
+                let i = 0
+                for(const module_item of findModule){
 
-                if(findUserProgress?.confirm){
-                    i++
-                } else{
+                    const findUserProgress = await UserProgress.findOne({chat_id, module_id: module_item?._id})
 
-                    dayjs.extend(utc);
-                    dayjs.extend(timezone);
-                    dayjs.extend(isSameOrBefore);
+                    if(findUserProgress?.confirm){
+                        i++
+                    } else{
 
-                    const currentDate = dayjs().tz('Europe/Kiev');
+                        dayjs.extend(utc);
+                        dayjs.extend(timezone);
+                        dayjs.extend(isSameOrBefore);
 
-                    const databaseDate = dayjs(module_item?.date).tz('Europe/Kiev');
+                        const currentDate = dayjs().tz('Europe/Kiev');
 
-                    if (databaseDate.isSameOrBefore(currentDate)) {
-                        const findTaskModule = module_item?.task_id?.length;
+                        const databaseDate = dayjs(module_item?.date).tz('Europe/Kiev');
 
-                        const practiceButtons = findTaskModule >= 1
-                            ? Array.from({ length: findTaskModule }, (_, i) => {
-                                return Markup.button.callback(`Здати практичну ${i + 1}`, `practice-${module_item?._id}-${i + 1}`);
-                            })
-                            : [];
+                        if (databaseDate.isSameOrBefore(currentDate)) {
+                            const findTaskModule = module_item?.task_id?.length;
 
-                        const practiceButtonRows = practiceButtons.map(button => [button]);
+                            const practiceButtons = findTaskModule >= 1
+                                ? Array.from({ length: findTaskModule }, (_, i) => {
+                                    return Markup.button.callback(`Практичне завдання №${i + 1} ${findUserProgress?.task_data[i]?.length > 1 || findUserProgress?.task_data[i] === true ? `${findUserProgress?.task_data[i] === true ? '✅' : '⌛' }` : ''}`, `${findUserProgress?.task_data[i]?.length > 1 ? `not_load` : `practice-${module_item?._id}-${i + 1}`}`);
+                                })
+                                : [];
 
-                        if(module_item?.task_id?.length && findUserProgress?.task && module_item?.test_id && findUserProgress?.test
-                            || !module_item?.task_id?.length && !findUserProgress?.task && module_item?.test_id && findUserProgress?.test){
+                            const practiceButtonRows = practiceButtons.map(button => [button]);
 
-                            if(module_item?.photo){
-                                return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
-                                    protect_content: true,
-                                    caption: module_item?.message,
-                                    ...Markup.inlineKeyboard([
-                                        findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
-                                        module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
-                                        ...practiceButtonRows, // Spread the practice buttons
-                                        [Markup.button.callback(await getFillingText('next_module_button'), `next_module_button-${module_item?._id}`)],
-                                    ]),
-                                }).then(async (response) => {
-                                    await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
-                                });
-                            }
+                            if(module_item?.task_id?.length && findUserProgress?.task && module_item?.test_id && findUserProgress?.test
+                                || !module_item?.task_id?.length && !findUserProgress?.task && module_item?.test_id && findUserProgress?.test){
 
-                            return ctx.replyWithHTML(
-                                module_item?.message,
-                                {
-                                    protect_content: true,
-                                    ...Markup.inlineKeyboard([
-                                        findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
-                                        module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
-                                        ...practiceButtonRows,
-                                        [Markup.button.callback(await getFillingText('next_module_button'), `next_module_button-${module_item?._id}`)],
-                                        // [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
-                                    ]),
+                                if(module_item?.photo){
+                                    return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
+                                        protect_content: true,
+                                        caption: module_item?.message,
+                                        ...Markup.inlineKeyboard([
+                                            findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                            module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
+                                            ...practiceButtonRows, // Spread the practice buttons
+                                            [Markup.button.callback(await getFillingText('next_module_button'), `next_module_button-${module_item?._id}`)],
+                                        ]),
+                                    }).then(async (response) => {
+                                        await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                                    });
                                 }
 
-                            ).then(async (response) => {
-                                await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
-                            });
+                                return ctx.replyWithHTML(
+                                    module_item?.message,
+                                    {
+                                        protect_content: true,
+                                        ...Markup.inlineKeyboard([
+                                            findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                            module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
+                                            ...practiceButtonRows,
+                                            [Markup.button.callback(await getFillingText('next_module_button'), `next_module_button-${module_item?._id}`)],
+                                            // [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
+                                        ]),
+                                    }
+
+                                ).then(async (response) => {
+                                    await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                                });
+                            } else {
+
+                                if(module_item?.photo){
+                                    return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
+                                        protect_content: true,
+                                        caption: module_item?.message,
+                                        ...Markup.inlineKeyboard([
+                                            findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                            module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
+                                            ...practiceButtonRows, // Spread the practice buttons
+                                            // [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
+                                        ]),
+                                    }).then(async (response) => {
+                                        await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                                    });
+                                }
+
+                                return ctx.replyWithHTML(
+                                    module_item?.message,
+                                    {
+                                        protect_content: true,
+                                        ...Markup.inlineKeyboard([
+                                            findUserProgress?.material ? [] :  [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                            module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
+                                            ...practiceButtonRows, // Spread the practice buttons
+                                            // [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
+                                        ]),
+                                    }
+                                ).then(async (response) => {
+                                    await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                                });
+
+                            }
                         } else {
+                            const messageText = await getFillingText('module_close_time_text')
 
-                            if(module_item?.photo){
-                                return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
-                                    protect_content: true,
-                                    caption: module_item?.message,
-                                    ...Markup.inlineKeyboard([
-                                        findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
-                                        module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
-                                        ...practiceButtonRows, // Spread the practice buttons
-                                        // [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
-                                    ]),
-                                }).then(async (response) => {
-                                    await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
-                                });
-                            }
+                            let result = messageText
+                                .replace(/\{open_date\}/g, dayjs(databaseDate).format('DD.MM HH:MM'))
 
                             return ctx.replyWithHTML(
-                                module_item?.message,
+                                result,
                                 {
                                     protect_content: true,
                                     ...Markup.inlineKeyboard([
-                                        findUserProgress?.material ? [] :  [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
-                                        module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
-                                        ...practiceButtonRows, // Spread the practice buttons
-                                        // [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
+                                        [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
                                     ]),
                                 }
                             ).then(async (response) => {
                                 await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
                             });
-
                         }
-                    } else {
-                        const messageText = await getFillingText('module_close_time_text')
-
-                        let result = messageText
-                            .replace(/\{open_date\}/g, dayjs(databaseDate).format('DD.MM HH:MM'))
-
-                        return ctx.replyWithHTML(
-                            result,
-                            {
-                                protect_content: true,
-                                ...Markup.inlineKeyboard([
-                                    [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
-                                ]),
-                            }
-                        ).then(async (response) => {
-                            await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
-                        });
                     }
                 }
             }
         }
     }
+
 });
 
 bot.on('video', async (ctx) => {
     try {
-        const video = ctx.message.video;
+
         const chat_id = ctx.message.from.id;
+        const userAction = await User.findOne({ chat_id })
+        const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
 
-        const fileName = video?.file_name
-        const name_video = fileName ? fileName.split('.').slice(0, -1).join('.') : `Video ${dayjs().format('DD.MM.YYYY HH:mm')}`;
+        if(callback === 'getPractical') {
+            try {
+                // ctx.deleteMessage().catch((e) => {
+                // })
+                ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
 
-        console.log(ctx.message)
-        ctx.replyWithHTML(
-            `Відео успішно збережено в бібліотеці: ${name_video}\n\n<b>Не видаляйте відео із чата!!!</b>\n\nЩоб завантажити відео, введіть команду знову!`,{
-                protect_content: true
+                const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
+                let task_data = []
+
+                if (findUserProgress?.task_data)
+                    task_data = [...findUserProgress?.task_data]
+
+                if (typeof task_data[Number(callback_3)-1] === 'string') {
+                    task_data[Number(callback_3)-1] += `,${ctx.message.message_id}`
+                }
+
+                else if (Array.isArray(task_data[Number(callback_3)-1])) {
+                    task_data[Number(callback_3)-1] = task_data[Number(callback_3)-1].join(',') + `,${ctx.message.message_id}`
+                }
+
+                else {
+                    task_data[Number(callback_3)-1] = `${ctx.message.message_id}`
+                }
+
+                await UserProgress.updateOne({chat_id, module_id: callback_2}, {task_data})
+
+                ctx.replyWithHTML(
+                    await getFillingText('text_practical_sent_info'), {
+                        protect_content: true,
+                        ...Markup.inlineKeyboard([
+                            [Markup.button.callback(await getFillingText('send_practical_to_mentor_button'), `success_sent_module_practical-${callback_2}-${callback_3}`)],
+                            [Markup.button.callback(await getFillingText('not_send_practical_to_mentor_button'), `decline_sent_module_practical-${callback_2}-${callback_3}`)],
+                        ]),
+                    }
+                ).then(async (response) => {
+                    await User.updateOne({chat_id}, {last_message: response?.message_id})
+                });
+            } catch (e) {
+                console.error(e)
             }
-        ).then(async (response) => { await User.updateOne({ chat_id }, { action: '' }) });
 
-        await Gallery.create({file_id:video?.file_id,chat_id,title: name_video})
+        } else if(callback === 'sent_video') {
+            const video = ctx.message.video;
+
+            const fileName = video?.file_name
+            const name_video = fileName ? fileName.split('.').slice(0, -1).join('.') : `Video ${dayjs().format('DD.MM.YYYY HH:mm')}`;
+
+            ctx.replyWithHTML(
+                `Відео успішно збережено в бібліотеці: ${name_video}\n\n<b>Не видаляйте відео із чата!!!</b>\n\nЩоб завантажити відео, введіть команду знову!`,{
+                    // protect_content: true
+                }
+            ).then(async (response) => { await User.updateOne({ chat_id }, { action: '' }) });
+
+            await Gallery.create({file_id:video?.file_id,chat_id,title: name_video})
+        }
+
     } catch (e) {
         console.error(e)
+    }
+});
+
+bot.on('document', async (ctx) => {
+    try {
+        const chat_id = ctx.message.from.id;
+        const userAction = await User.findOne({ chat_id })
+        const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
+
+        if(callback === 'getPractical') {
+            try {
+                // ctx.deleteMessage().catch((e) => {
+                // })
+                ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
+
+                const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
+                let task_data = []
+
+                if (findUserProgress?.task_data)
+                    task_data = [...findUserProgress?.task_data]
+
+                if (typeof task_data[Number(callback_3)-1] === 'string') {
+                    task_data[Number(callback_3)-1] += `,${ctx.message.message_id}`
+                }
+
+                else if (Array.isArray(task_data[Number(callback_3)-1])) {
+                    task_data[Number(callback_3)-1] = task_data[Number(callback_3)-1].join(',') + `,${ctx.message.message_id}`
+                }
+
+                else {
+                    task_data[Number(callback_3)-1] = `${ctx.message.message_id}`
+                }
+
+                await UserProgress.updateOne({chat_id, module_id: callback_2}, {task_data})
+
+                ctx.replyWithHTML(
+                    await getFillingText('text_practical_sent_info'), {
+                        protect_content: true,
+                        ...Markup.inlineKeyboard([
+                            [Markup.button.callback(await getFillingText('send_practical_to_mentor_button'), `success_sent_module_practical-${callback_2}-${callback_3}`)],
+                            [Markup.button.callback(await getFillingText('not_send_practical_to_mentor_button'), `decline_sent_module_practical-${callback_2}-${callback_3}`)],
+                        ]),
+                    }
+                ).then(async (response) => {
+                    await User.updateOne({chat_id}, {last_message: response?.message_id})
+                });
+            } catch (e) {
+                console.error(e)
+            }
+
+        }
+    } catch (error) {
+        console.error('Помилка обробки документа:', error);
+    }
+});
+
+bot.on('photo', async (ctx) => {
+    try {
+        const chat_id = ctx.message.from.id;
+        const userAction = await User.findOne({ chat_id })
+        const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
+
+        if(callback === 'getPractical') {
+            try {
+                // ctx.deleteMessage().catch((e) => {
+                // })
+                ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
+
+                const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
+                let task_data = []
+
+                if (findUserProgress?.task_data)
+                    task_data = [...findUserProgress?.task_data]
+
+                if (typeof task_data[Number(callback_3)-1] === 'string') {
+                    task_data[Number(callback_3)-1] += `,${ctx.message.message_id}`
+                }
+
+                else if (Array.isArray(task_data[Number(callback_3)-1])) {
+                    task_data[Number(callback_3)-1] = task_data[Number(callback_3)-1].join(',') + `,${ctx.message.message_id}`
+                }
+
+                else {
+                    task_data[Number(callback_3)-1] = `${ctx.message.message_id}`
+                }
+
+                await UserProgress.updateOne({chat_id, module_id: callback_2}, {task_data})
+
+                ctx.replyWithHTML(
+                    await getFillingText('text_practical_sent_info'), {
+                        protect_content: true,
+                        ...Markup.inlineKeyboard([
+                            [Markup.button.callback(await getFillingText('send_practical_to_mentor_button'), `success_sent_module_practical-${callback_2}-${callback_3}`)],
+                            [Markup.button.callback(await getFillingText('not_send_practical_to_mentor_button'), `decline_sent_module_practical-${callback_2}-${callback_3}`)],
+                        ]),
+                    }
+                ).then(async (response) => {
+                    await User.updateOne({chat_id}, {last_message: response?.message_id})
+                });
+            } catch (e) {
+                console.error(e)
+            }
+
+        }
+    } catch (error) {
+        console.error('Помилка обробки фото:', error);
     }
 });
 
@@ -316,6 +566,89 @@ bot.on('callback_query', async (ctx) => {
                 // await setUserType({chat_id, type_user: callback.replace("start_", "")})
                 ctx.answerCbQuery('')
                 break;
+            case 'success_sent_module_practical': {
+                // ctx.deleteMessage().catch((e) => {})
+                ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
+
+                const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
+                const findModule = await Module.findOne({_id: callback_2})
+
+                const getUser = await User.findOne({chat_id})
+
+                if(findUserProgress && findModule){
+                    if(findUserProgress?.task_data[Number(callback_3)-1]){
+                        const message_id = findUserProgress?.task_data[Number(callback_3)-1].split(',');
+                        const response = await ctx.telegram.sendMessage(
+                            '-1002329684167',
+                            `Модуль: ${findModule?.title}\nUsername: @${getUser?.username}\nName: ${getUser?.first_name ? getUser?.first_name : ''} ${getUser?.last_name ? getUser?.last_name : ''}\nНомер телефону: ${getUser?.phone}\nchat_id: ${getUser?.chat_id}\nmodule_id:${findModule?._id}\npractical:${Number(callback_3)-1}\n\nЩоб надіслати фідбек користувачу, відповідайте на це повідомлення`,
+                            { parse_mode: 'HTML', protect_content: true }
+                        );
+
+                        for(const message of message_id){
+                            if(message)
+                                await ctx.telegram.forwardMessage(
+                                    '-1002329684167',
+                                    chat_id,
+                                    message
+                                ).catch((e)=>{});
+                        }
+
+                        await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' });
+                    }
+                }
+
+                const findTaskModule = findModule?.task_id?.length;
+
+                const practiceButtons = findTaskModule >= 1
+                    ? Array.from({ length: findTaskModule }, (_, i) => {
+                        return Markup.button.callback(`Практичне завдання №${i + 1} ${findUserProgress?.task_data[i]?.length > 1 || findUserProgress?.task_data[i] === true ? `${findUserProgress?.task_data[i] === true ? '✅' : '⌛' }` : ''}`, `${findUserProgress?.task_data[i]?.length > 1 ? `not_load` : `practice-${module_item?._id}-${i + 1}`}`);
+                    })
+                    : [];
+
+                const practiceButtonRows = practiceButtons.map(button => [button]);
+
+                if(findModule?.photo){
+                    return ctx.sendPhoto({ source:`./uploads/module/${findModule?.photo}`},{
+                        protect_content: true,
+                        caption: findModule?.message,
+                        ...Markup.inlineKeyboard([
+                            findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${findModule?._id}`)],
+                            findModule?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${findModule?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
+                            ...practiceButtonRows,
+                        ]),
+                    }).then(async (response) => {
+                        await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                    });
+                } else {
+                    return ctx.replyWithHTML(
+                        findModule?.message,
+                        {
+                            protect_content: true,
+                            ...Markup.inlineKeyboard([
+                                findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${findModule?._id}`)],
+                                findModule?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${findModule?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
+                                ...practiceButtonRows,
+                                // [Markup.button.callback(await getFillingText('next_module_button'), `next_module_button-${findModule?._id}`)],
+                                // [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
+                            ]),
+                        }
+                    ).then(async (response) => {
+                        await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                    });
+                }
+
+                ctx.answerCbQuery('')
+                break;
+            }
+            case 'decline_sent_module_practical': {
+                await ctx.telegram.forwardMessage(
+                    '-1002329684167',
+                    ctx.message.chat.id,
+                    ctx.message.message_id
+                );
+                ctx.answerCbQuery('')
+                break;
+            }
             case 'get_module_file_button': {
                 ctx.deleteMessage().catch((e)=>{})
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
@@ -338,12 +671,10 @@ bot.on('callback_query', async (ctx) => {
 
                 if(findModule?.other_files?.length){
                     for(const objectModule of findModule?.other_files){
-                        // const galleryItem = await Gallery.findOne({_id:objectModule})
-
 
                         await ctx.sendDocument({source: `./uploads/module/${objectModule}`},{
                             protect_content: true
-                        })
+                        }).catch((e)=>{})
                     }
                 }
 
@@ -359,7 +690,8 @@ bot.on('callback_query', async (ctx) => {
 
                 const practiceButtons = findTaskModule >= 1
                     ? Array.from({ length: findTaskModule }, (_, i) => {
-                        return Markup.button.callback(`Здати практичну ${i + 1}`, `practice-${module_item?._id}-${i + 1}`);
+                        return Markup.button.callback(`Практичне завдання №${i + 1} ${findUserProgress?.task_data[i]?.length > 1 || findUserProgress?.task_data[i] === true ? `${findUserProgress?.task_data[i] === true ? '✅' : '⌛' }` : ''}`, `${findUserProgress?.task_data[i]?.length > 1 ? `not_load` : `practice-${module_item?._id}-${i + 1}`}`);
+
                     })
                     : [];
 
@@ -430,7 +762,8 @@ bot.on('callback_query', async (ctx) => {
 
                                 const practiceButtons = findTaskModule >= 1
                                     ? Array.from({ length: findTaskModule }, (_, i) => {
-                                        return Markup.button.callback(`Практичне завдання №${i + 1}`, `practice-${module_item?._id}-${i + 1}`);
+                                        return Markup.button.callback(`Практичне завдання №${i + 1} ${findUserProgress?.task_data[i]?.length > 1 || findUserProgress?.task_data[i] === true ? `${findUserProgress?.task_data[i] === true ? '✅' : '⌛' }` : ''}`, `${findUserProgress?.task_data[i]?.length > 1 ? `not_load` : `practice-${module_item?._id}-${i + 1}`}`);
+
                                     })
                                     : [];
 
@@ -545,7 +878,7 @@ bot.on('callback_query', async (ctx) => {
 
                 const practiceButtons = findTaskModule >= 1
                     ? Array.from({length: findTaskModule}, (_, i) => {
-                        return Markup.button.callback(`Здати практичну ${i + 1}`, `practice-${module_item?._id}-${i + 1}`);
+                        return Markup.button.callback(`Практичне завдання №${i + 1} ${findUserProgress?.task_data[i]?.length > 1 || findUserProgress?.task_data[i] === true ? `${findUserProgress?.task_data[i] === true ? '✅' : '⌛' }` : ''}`, `${findUserProgress?.task_data[i]?.length > 1 ? `not_load` : `practice-${module_item?._id}-${i + 1}`}`);
                     })
                     : [];
 
@@ -750,7 +1083,7 @@ bot.on('callback_query', async (ctx) => {
                         {
                             protect_content: true,
                             ...Markup.inlineKeyboard([
-                                [Markup.button.callback(await getFillingText('back_to_main_module'), `back_to_main_module-${callback_2}`)],
+                                module_item?.task_id?.length ? [Markup.button.callback(await getFillingText('back_to_main_module'), `back_to_main_module-${callback_2}`)] : [Markup.button.callback(await getFillingText('next_module_button'), `next_module_button-${module_item?._id}`)],
                             ]),
                         }
                     ).then(async (response) => {
@@ -870,7 +1203,39 @@ bot.on('callback_query', async (ctx) => {
 
                     }
                 ).then(async (response) => {
-                    await User.updateOne({chat_id}, {last_message: response?.message_id})
+                    await User.updateOne({chat_id}, {last_message: response?.message_id, action:''})
+                });
+
+                ctx.answerCbQuery('')
+
+                break;
+            }
+            case 'send_practical': {
+
+                ctx.deleteMessage().catch((e) => {})
+                ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
+
+                const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
+                let task_data = []
+
+                if (findUserProgress?.task_data)
+                    task_data = [...findUserProgress?.task_data]
+
+
+                    task_data[Number(callback_3)-1] = ''
+
+                await UserProgress.updateOne({chat_id, module_id: callback_2}, {task_data})
+
+                ctx.replyWithHTML(
+                await getFillingText('success_sent_practical'), {
+                        protect_content: true,
+                        ...Markup.inlineKeyboard([
+                            [Markup.button.callback(await getFillingText('back_to_practical_button'), `practice-${callback_2}-${callback_3}`)],
+                        ]),
+
+                    }
+                ).then(async (response) => {
+                    await User.updateOne({chat_id}, {last_message: response?.message_id, action:`getPractical-${callback_2}-${callback_3}`})
                 });
 
                 ctx.answerCbQuery('')
