@@ -134,8 +134,8 @@ bot.on('text', async (ctx) => {
     const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
     // console.log(callback, callback_2, callback_3, callback_4)
 
-    //-1002329684167
-    if(ctx?.message?.chat?.id && ctx?.message?.chat?.id === -1002329684167){
+    //-1002452517593
+    if(ctx?.message?.chat?.id && ctx?.message?.chat?.id === -1002452517593){
 
         const text = ctx.message.reply_to_message.text;
 
@@ -579,7 +579,7 @@ bot.on('callback_query', async (ctx) => {
                     if(findUserProgress?.task_data[Number(callback_3)-1]){
                         const message_id = findUserProgress?.task_data[Number(callback_3)-1].split(',');
                         const response = await ctx.telegram.sendMessage(
-                            '-1002329684167',
+                            '-1002452517593',
                             `Модуль: ${findModule?.title}\nUsername: @${getUser?.username}\nName: ${getUser?.first_name ? getUser?.first_name : ''} ${getUser?.last_name ? getUser?.last_name : ''}\nНомер телефону: ${getUser?.phone}\nchat_id: ${getUser?.chat_id}\nmodule_id:${findModule?._id}\npractical:${Number(callback_3)-1}\n\nЩоб надіслати фідбек користувачу, відповідайте на це повідомлення`,
                             { parse_mode: 'HTML', protect_content: true }
                         );
@@ -587,7 +587,7 @@ bot.on('callback_query', async (ctx) => {
                         for(const message of message_id){
                             if(message)
                                 await ctx.telegram.forwardMessage(
-                                    '-1002329684167',
+                                    '-1002452517593',
                                     chat_id,
                                     message
                                 ).catch((e)=>{});
@@ -601,7 +601,7 @@ bot.on('callback_query', async (ctx) => {
 
                 const practiceButtons = findTaskModule >= 1
                     ? Array.from({ length: findTaskModule }, (_, i) => {
-                        return Markup.button.callback(`Практичне завдання №${i + 1} ${findUserProgress?.task_data[i]?.length > 1 || findUserProgress?.task_data[i] === true ? `${findUserProgress?.task_data[i] === true ? '✅' : '⌛' }` : ''}`, `${findUserProgress?.task_data[i]?.length > 1 ? `not_load` : `practice-${module_item?._id}-${i + 1}`}`);
+                        return Markup.button.callback(`Практичне завдання №${i + 1} ${findUserProgress?.task_data[i]?.length > 1 || findUserProgress?.task_data[i] === true ? `${findUserProgress?.task_data[i] === true ? '✅' : '⌛' }` : ''}`, `${findUserProgress?.task_data[i]?.length > 1 ? `not_load` : `practice-${findModule?._id}-${i + 1}`}`);
                     })
                     : [];
 
@@ -642,7 +642,7 @@ bot.on('callback_query', async (ctx) => {
             }
             case 'decline_sent_module_practical': {
                 await ctx.telegram.forwardMessage(
-                    '-1002329684167',
+                    '-1002452517593',
                     ctx.message.chat.id,
                     ctx.message.message_id
                 );
