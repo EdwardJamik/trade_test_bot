@@ -1073,7 +1073,7 @@ bot.on('callback_query', async (ctx) => {
                         { chat_id, module_id: callback_2 }
                     );
 
-                    const finishText = await getFillingText('finish_test_point_text')
+                    const finishText = module_item?.task_id?.length ? await getFillingText('finish_test_point_text') : await getFillingText('finish_next_test_point_text')
 
                     let result = finishText
                         .replace(/\{point\}/g, `${getPointUser?.point}/${amountQuestion}`)
