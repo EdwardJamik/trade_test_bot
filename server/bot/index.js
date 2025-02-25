@@ -188,28 +188,46 @@ bot.on('text', async (ctx) => {
 
                         if(module_item?.task_id?.length && findUserProgress?.task && module_item?.test_id && findUserProgress?.test
                             || !module_item?.task_id?.length && !findUserProgress?.task && module_item?.test_id && findUserProgress?.test){
+
                             return ctx.replyWithHTML(
                                 module_item?.message,
                                 {
                                     protect_content: true,
                                     ...Markup.inlineKeyboard([
-                                        [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                        findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
                                         module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
                                         ...practiceButtonRows,
                                         [Markup.button.callback(await getFillingText('next_module_button'), `next_module_button-${module_item?._id}`)],
                                         [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
                                     ]),
                                 }
+
                             ).then(async (response) => {
                                 await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
                             });
                         } else {
+
+                            if(module_item?.photo){
+                                return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
+                                    protect_content: true,
+                                    caption: module_item?.message,
+                                    ...Markup.inlineKeyboard([
+                                        findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                        module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
+                                        ...practiceButtonRows, // Spread the practice buttons
+                                        [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
+                                    ]),
+                                }).then(async (response) => {
+                                    await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                                });
+                            }
+
                             return ctx.replyWithHTML(
                                 module_item?.message,
                                 {
                                     protect_content: true,
                                     ...Markup.inlineKeyboard([
-                                        [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                        findUserProgress?.material ? [] :  [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
                                         module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
                                         ...practiceButtonRows, // Spread the practice buttons
                                         [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
@@ -218,6 +236,7 @@ bot.on('text', async (ctx) => {
                             ).then(async (response) => {
                                 await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
                             });
+
                         }
                     } else {
                         const messageText = await getFillingText('module_close_time_text')
@@ -273,6 +292,7 @@ bot.on('callback_query', async (ctx) => {
 
         const [callback, callback_2, callback_3, callback_4] = input.split("-");
         console.log(callback, callback_2, callback_3, callback_4)
+
         switch (callback) {
             case 'get_modules':
                 // await setUserType({chat_id, type_user: callback.replace("start_", "")})
@@ -302,15 +322,31 @@ bot.on('callback_query', async (ctx) => {
                     }
                 }
 
+                if(findModule?.other_files?.length){
+                    for(const objectModule of findModule?.other_files){
+                        // const galleryItem = await Gallery.findOne({_id:objectModule})
+
+
+                        await ctx.sendDocument({source: `./uploads/module/${objectModule}`},{
+                            protect_content: true
+                        })
+                    }
+                }
+
                 const module_item = findModule
-                const findUserProgress = await UserProgress.findOne({chat_id, module_id: module_item?._id})
+
+                const findCurrentProgress =  await UserProgress.findOne({chat_id, module_id: callback_2})
+                if(!findCurrentProgress)
+                    await UserProgress.create({chat_id, module_id: callback_2, material:true})
+
+                const findUserProgress =  await UserProgress.findOne({chat_id, module_id: callback_2})
 
                 ctx.replyWithHTML(
                     await getFillingText('get_module_other_file_text'),
                     {
                         protect_content: true,
                         ...Markup.inlineKeyboard([
-                            [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                            findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
                             module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
                             // ...practiceButtonRows, // Spread the practice buttons
                             [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
@@ -368,7 +404,7 @@ bot.on('callback_query', async (ctx) => {
                                         {
                                             protect_content: true,
                                             ...Markup.inlineKeyboard([
-                                                [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                                findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
                                                 module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
                                                 ...practiceButtonRows,
                                                 [Markup.button.callback(await getFillingText('next_module_button'), `next_module_button-${module_item?._id}`)],
@@ -384,7 +420,7 @@ bot.on('callback_query', async (ctx) => {
                                         {
                                             protect_content: true,
                                             ...Markup.inlineKeyboard([
-                                                [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                                findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
                                                 module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
                                                 ...practiceButtonRows, // Spread the practice buttons
                                                 [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
@@ -452,7 +488,7 @@ bot.on('callback_query', async (ctx) => {
                         {
                             protect_content: true,
                             ...Markup.inlineKeyboard([
-                                [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
                                 module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
                                 ...practiceButtonRows,
                                 [Markup.button.callback(await getFillingText('next_module_button'), `next_module_button-${callback_2}`)],
@@ -468,7 +504,7 @@ bot.on('callback_query', async (ctx) => {
                         {
                             protect_content: true,
                             ...Markup.inlineKeyboard([
-                                [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
+                                findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
                                 module_item?.test_id && !findUserProgress?.test ? [Markup.button.callback(await getFillingText('get_module_test_button'), `get_module_test_button-${module_item?._id}`)] : [Markup.button.callback(await getFillingText('test_confirm_button'), 'test_confirm_button')],
                                 ...practiceButtonRows, // Spread the practice buttons
                                 [Markup.button.callback(await getFillingText('back_to_main_menu'), 'back_to_main_menu')],
@@ -507,16 +543,19 @@ bot.on('callback_query', async (ctx) => {
 
                 const amountTest = findTest?.questions[0]?.choices?.length || 0;
                 const answerButtons = [];
-                for (let i = 0; i < amountTest; i += 2) {
-                    const row = [
-                        Markup.button.callback(`${button_letters[i]}`, `answer-${callback_2}-0-${i + 1}`)
-                    ];
+
+                const row = [
+                    // Markup.button.callback(`${button_letters[i]}`, `answer-${callback_2}-0-${i}`)
+                ];
+                for (let i = 0; i < amountTest; i++ ) {
+
+
                     if (i + 1 < amountTest) {
-                        row.push(Markup.button.callback(`${button_letters[i + 1]}`, `answer-${callback_2}-0-${i + 1}`));
+                        row.push(Markup.button.callback(`${button_letters[i + 1]}`, `answer-${callback_2}-0-${i}`));
                     }
                     answerButtons.push(row);
                 }
-
+                console.log(answerButtons)
                 // const amountTest = findTest?.questions?.length
 
                 ctx.replyWithHTML(
@@ -531,7 +570,11 @@ bot.on('callback_query', async (ctx) => {
                     await User.updateOne({chat_id}, {last_message: response?.message_id, action: ''})
                 });
 
-                await UserProgress.create({chat_id, module_id: callback_2,test: true})
+                const findUserProgress =  await UserProgress.findOne({chat_id, module_id: callback_2})
+                if(!findUserProgress)
+                    await UserProgress.create({chat_id, module_id: callback_2, test: true})
+                else
+                    await UserProgress.updateOne({chat_id, module_id: callback_2},{test: true})
 
                 ctx.answerCbQuery('')
                 break;
@@ -555,6 +598,11 @@ bot.on('callback_query', async (ctx) => {
                         await UserProgress.updateOne(
                             { chat_id, module_id: callback_2 },
                             { $inc: { point: 1 } }
+                        );
+
+                        await User.updateOne(
+                            { chat_id },
+                            { $inc: { points: 1 } }
                         );
 
                         const button_letters = ["A", "B", "C", "D"];
@@ -621,6 +669,11 @@ bot.on('callback_query', async (ctx) => {
                             { $inc: { point: 1 } }
                         );
 
+                        await User.updateOne(
+                            { chat_id },
+                            { $inc: { points: 1 } }
+                        );
+
                         const button_letters = ["A", "B", "C", "D"];
 
                         let messageText = await getFillingText('answer_correct_text')
@@ -671,15 +724,13 @@ bot.on('callback_query', async (ctx) => {
                     const answerButtons = [];
                     for (let i = 0; i < amountTest; i += 2) {
                         const row = [
-                            Markup.button.callback(`${button_letters[i]}`, `answer-${callback_2}-${Number(callback_3)+1}-${i + 1}`)
+                            Markup.button.callback(`${button_letters[i]}`, `answer-${callback_2}-${Number(callback_3)+1}-${i}`)
                         ];
                         if (i + 1 < amountTest) {
                             row.push(Markup.button.callback(`${button_letters[i + 1]}`, `answer-${callback_2}-${Number(callback_3)+1}-${i + 1}`));
                         }
                         answerButtons.push(row);
                     }
-
-                    // const amountTest = findTest?.questions?.length
 
                     ctx.replyWithHTML(
                         result,

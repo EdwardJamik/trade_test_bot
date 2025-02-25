@@ -26,6 +26,10 @@ const UserProgressScheme = new mongoose.Schema({
     test_send:{
         type: Date,
     },
+    material:{
+        type: Boolean,
+        default: false,
+    },
     point:{
         type: Number,
         default: 0
