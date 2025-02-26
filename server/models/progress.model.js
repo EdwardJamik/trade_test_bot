@@ -41,6 +41,14 @@ const UserProgressScheme = new mongoose.Schema({
     last_message:{
         type: String
     },
+    remind_1h:{
+        type: Boolean,
+        default:false,
+    },
+    remind_24h:{
+        type: Boolean,
+        default:false,
+    },
     createdAt: {
         type: Date,
         // default: Date.now

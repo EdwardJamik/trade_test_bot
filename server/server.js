@@ -4,11 +4,13 @@ const cors = require("cors");
 const path = require('path');
 const bodyParser = require('body-parser');
 const cron = require("node-cron");
+const User = require("./models/user.model");
 const Mailing = require("./models/sending.model");
+const UserProgress = require("./models/progress.model");
 require("dotenv").config();
 const app = express();
 const { Op } = require('sequelize');
-const {sendUserMessages} = require("./bot");
+const {sendUserMessages,sendUserReminderMessages} = require("./bot");
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -46,6 +48,52 @@ cron.schedule('*/15 * * * * *', async () => {
         sendUserMessages(findMailing?._id)
     }
 });
+
+
+cron.schedule('* * * * *', async () => {
+
+    const currentDate = new Date();
+
+    const oneHourAgo = new Date(currentDate);
+    oneHourAgo.setHours(currentDate.getHours() - 1);
+
+    const twentyFourHoursAgo = new Date(currentDate);
+    twentyFourHoursAgo.setHours(currentDate.getHours() - 24);
+
+    const findProgress1h = await UserProgress.distinct('chat_id', {
+        updatedAt: {
+            $lte: oneHourAgo,
+            $gt: twentyFourHoursAgo
+        },
+        confirm: false,
+        remind_1h: false
+    });
+
+    const findProgress24h = await UserProgress.distinct('chat_id', {
+        updatedAt: {
+            $lte: twentyFourHoursAgo
+        },
+        confirm: false,
+        remind_24h: false
+    });
+
+    if(findProgress1h?.length) {
+        await UserProgress.updateMany(
+            { chat_id: { $in: findProgress1h } },
+            { $set: { remind_1h: true } }
+        );
+        await sendUserReminderMessages(findProgress1h)
+    }
+
+    if (findProgress24h?.length) {
+        await UserProgress.updateMany(
+            { chat_id: { $in: findProgress24h } },
+            { $set: { remind_24h: true } }
+        );
+        await sendUserReminderMessages(findProgress24h);
+    }
+});
+
 
 const supportFolder = path.join(__dirname, 'uploads/module');
 const supportFolderTest = path.join(__dirname, 'uploads/testing');

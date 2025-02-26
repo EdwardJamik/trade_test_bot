@@ -1518,45 +1518,6 @@ bot.on('callback_query', async (ctx) => {
                 ctx.answerCbQuery('')
         }
 
-
-        // if (callback === 'check_group') {
-        //     const check_group = await bot.telegram.getChatMember(CHAT_ID_GROUPE, chat_id)
-        //     const check_channel = await bot.telegram.getChatMember(CHAT_ID_CHANNEL, chat_id)
-        //
-        //     if((check_channel.status === 'member' || check_channel.status === 'creator' || check_channel.status === 'administrator') &&
-        //         (check_group.status === 'member' || check_group.status === 'creator' || check_group.status === 'administrator')){
-        //         const keyboards = await Markup.inlineKeyboard(
-        //             [
-        //                 [
-        //                     Markup.button.webApp(button[`game_${user_language}`], webAppUrl),
-        //                 ]
-        //             ]
-        //         )
-        //
-        //         await ctx.editMessageText(message[`ref_${user_language}`], {
-        //             ...keyboards,
-        //             parse_mode: 'HTML'
-        //         })
-        //     } else {
-        //         const keyboards = await Markup.inlineKeyboard(
-        //             [
-        //                 [
-        //                     Markup.button.url(`${button[`channel_${user_language}`]} ${check_channel.status === 'member' || check_channel.status === 'creator' || check_channel.status === 'administrator' ? '✅' : ''}`, LINK_CHANNEL_BOT),
-        //                     Markup.button.url(`${button[`group_${user_language}`]} ${check_group.status === 'member' || check_group.status === 'creator' || check_group.status === 'administrator' ? '✅' : ''}`, LINK_GROUP_BOT),
-        //                 ],
-        //                 [
-        //                     Markup.button.callback(button[`wait_${user_language}`], 'check_group'),
-        //                 ]
-        //             ]
-        //         )
-        //
-        //         await ctx.editMessageText(message[`not_${user_language}`], {
-        //             ...keyboards,
-        //             parse_mode: 'HTML'
-        //         })
-        //     }
-        //
-        // }
     } catch (e) {
         console.error(e)
     }
@@ -1679,5 +1640,36 @@ async function sendUserMessages (id){
     }
 }
 
+async function sendUserReminderMessages (findUsers){
+    try {
+        let counter = 0
+
+        async function getRandomItem(array) {
+            const randomIndex = Math.floor(Math.random() * array.length);
+            const message = await getFillingText(`${array[randomIndex]}`);
+            return message;
+        }
+
+        if(findUsers) {
+            for (const user of findUsers) {
+                const message = await getRandomItem(['random_remining_text_1','random_remining_text_2','random_remining_text_3']);
+
+                const sending = await bot.telegram.sendMessage(user, message, {
+                    parse_mode: 'HTML',
+                    protect_content: true
+                });
+
+                if (sending?.chat?.id) {
+                    counter++;
+                }
+            }
+        }
+    } catch (e){
+        console.error(e)
+    }
+}
+
+
 module.exports.bot = bot
 module.exports.sendUserMessages = sendUserMessages
+module.exports.sendUserReminderMessages = sendUserReminderMessages
