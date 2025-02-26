@@ -275,7 +275,7 @@ bot.on('text', async (ctx) => {
             } else if (getMessageCode === 'info_button') {
                 ctx.deleteMessage().catch((e)=>{})
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
-                ctx.sendPhoto('AgACAgIAAxkBAAIKAAFnvxALSMQjRGHGa-Ro0584eHT2l5QACDe0xG7hE-UmJuQNYJNOsCAEAAwIAA3kAAzYE',{
+                ctx.sendPhoto('AgACAgIAAxkBAAIDKWe_EmEYbq3pl8skkFdtoh3WnhjLAAKQ7TEbPmP4SYTqu29NVnE1AQADAgADeQADNgQ',{
                     protect_content: true,
                     caption: await getFillingText('info_menu_text')
                 }).then(async (response) => {
@@ -291,7 +291,7 @@ bot.on('text', async (ctx) => {
                 ctx.deleteMessage().catch((e)=>{})
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
 
-                ctx.sendPhoto('AgACAgIAAxkBAAIKAAFnvxALSMQjRGHGa-Ro0584eHTl5QACDe0xG7hE-UmJuQNYJNOsCAEAAwIAA3kAAzYE',{
+                ctx.sendPhoto('AgACAgIAAxkBAAIDKGe_ElyexZ8WwIzOZF9aOrd9tlaxAAIN7TEbuET5SWxQrKRBuMA_AQADAgADeQADNgQ',{
                     protect_content: true,
                     caption: await getFillingText('catalog_menu_text')
                 }).then(async (response) => {
