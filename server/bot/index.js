@@ -829,9 +829,11 @@ bot.on('callback_query', async (ctx) => {
                 const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
                 const findAllUserProgress = await UserProgress.find({chat_id})
 
-                if(findModule?.length !== findAllUserProgress?.length || findModule?.length === findAllUserProgress?.length && !findUserProgress?.confirm){
+               if(findModule?.length !== findAllUserProgress?.length || findModule?.length === findAllUserProgress?.length && !findUserProgress?.confirm){
                     let i = 0
+
                     for(const module_item of findModule){
+                        const findUserProgress = await UserProgress.findOne({chat_id, module_id: module_item?._id})
 
                         if(findUserProgress?.confirm){
                             i++
@@ -844,10 +846,10 @@ bot.on('callback_query', async (ctx) => {
                             const currentDate = dayjs().tz('Europe/Kiev');
 
                             const databaseDate = dayjs(module_item?.date).tz('Europe/Kiev');
-
+                            console.log('tut1')
                             if (databaseDate.isSameOrBefore(currentDate)) {
                                 const findTaskModule = module_item?.task_id?.length;
-
+                                console.log('tut2')
                                 const practiceButtons = findTaskModule >= 1
                                     ? Array.from({ length: findTaskModule }, (_, i) => {
                                         return Markup.button.callback(`Практичне завдання №${i + 1} ${findUserProgress?.task_data[i]?.length > 1 || findUserProgress?.task_data[i] === true ? `${findUserProgress?.task_data[i] === true ? '✅' : '⌛' }` : ''}`, `${findUserProgress?.task_data[i]?.length > 1 ? `not_load` : `practice-${module_item?._id}-${i + 1}`}`);
@@ -872,7 +874,8 @@ bot.on('callback_query', async (ctx) => {
                                             ]),
                                         }).then(async (response) => {
                                             await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
-                                        });
+                                        }).catch((e)=>{
+                                            console.error(e)});
                                     }
 
                                     return ctx.replyWithHTML(
@@ -889,9 +892,10 @@ bot.on('callback_query', async (ctx) => {
                                         }
                                     ).then(async (response) => {
                                         await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
-                                    });
+                                    }).catch((e)=>{
+                                        console.error(e)});;
                                 } else {
-
+                                    console.log('tut 4')
                                     if(module_item?.photo){
                                         return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
                                             protect_content: true,
@@ -903,7 +907,8 @@ bot.on('callback_query', async (ctx) => {
                                             ]),
                                         }).then(async (response) => {
                                             await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
-                                        });
+                                        }).catch((e)=>{
+                                            console.error(e)});;
                                     }
 
                                     return ctx.replyWithHTML(
@@ -919,7 +924,8 @@ bot.on('callback_query', async (ctx) => {
                                         }
                                     ).then(async (response) => {
                                         await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
-                                    });
+                                    }).catch((e)=>{
+                                        console.error(e)});;
                                 }
                             } else {
                                 const messageText = await getFillingText('module_close_time_text')
@@ -937,7 +943,8 @@ bot.on('callback_query', async (ctx) => {
                                     }
                                 ).then(async (response) => {
                                     await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
-                                });
+                                }).catch((e)=>{
+                                    console.error(e)});
                             }
 
 
