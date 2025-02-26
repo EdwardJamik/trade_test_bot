@@ -300,7 +300,7 @@ bot.on('text', async (ctx) => {
                     .sort({ createdAt: -1 });
                 const findAllUserProgress = await UserProgress.find({chat_id})
 
-                if(findModule?.length !== findAllUserProgress?.length && !findUserProgress?.confirm || findModule?.length === findAllUserProgress?.length && !findUserProgress?.confirm){
+                if(findModule?.length !== findAllUserProgress?.length || findModule?.length === findAllUserProgress?.length && !findUserProgress?.confirm){
 
                     let i = 0
                     for(const module_item of findModule){
