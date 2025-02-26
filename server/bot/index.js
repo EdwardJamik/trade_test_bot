@@ -578,7 +578,7 @@ bot.on('photo', async (ctx) => {
         const userAction = await User.findOne({ chat_id })
         const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
 
-        console.log(ctx.message?.photo[3]?.file_id)
+        // console.log(ctx.message?.photo[3]?.file_id)
 
         if(callback === 'getPractical') {
             try {
