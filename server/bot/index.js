@@ -277,6 +277,8 @@ bot.on('text', async (ctx) => {
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
                 ctx.sendPhoto('AgACAgIAAxkBAAIDKWe_EmEYbq3pl8skkFdtoh3WnhjLAAKQ7TEbPmP4SYTqu29NVnE1AQADAgADeQADNgQ',{
                     protect_content: true,
+                    parse_mode:'HTML',
+
                     caption: await getFillingText('info_menu_text')
                 }).then(async (response) => {
                     await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
@@ -293,6 +295,8 @@ bot.on('text', async (ctx) => {
 
                 ctx.sendPhoto('AgACAgIAAxkBAAIDKGe_ElyexZ8WwIzOZF9aOrd9tlaxAAIN7TEbuET5SWxQrKRBuMA_AQADAgADeQADNgQ',{
                     protect_content: true,
+                    parse_mode:'HTML',
+
                     caption: await getFillingText('catalog_menu_text')
                 }).then(async (response) => {
                     await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
@@ -370,6 +374,7 @@ bot.on('text', async (ctx) => {
                                     if(module_item?.photo){
                                         return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
                                             protect_content: true,
+                                            parse_mode:'HTML',
                                             caption: module_item?.message,
                                             ...Markup.inlineKeyboard([
                                                 findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
@@ -688,6 +693,7 @@ bot.on('callback_query', async (ctx) => {
                 if(findModule?.photo){
                     return ctx.sendPhoto({ source:`./uploads/module/${findModule?.photo}`},{
                         protect_content: true,
+                        parse_mode:'HTML',
                         caption: findModule?.message,
                         ...Markup.inlineKeyboard([
                             findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${findModule?._id}`)],
@@ -806,6 +812,8 @@ bot.on('callback_query', async (ctx) => {
                 if(module_item?.photo){
                     return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
                         protect_content: true,
+                        parse_mode:'HTML',
+
                         caption: module_item?.message,
                         ...Markup.inlineKeyboard([
                             findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
@@ -883,6 +891,8 @@ bot.on('callback_query', async (ctx) => {
                                     if(module_item?.photo){
                                         return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
                                             protect_content: true,
+                                            parse_mode:'HTML',
+
                                             caption: module_item?.message,
                                             ...Markup.inlineKeyboard([
                                                 findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
@@ -917,6 +927,8 @@ bot.on('callback_query', async (ctx) => {
                                     if(module_item?.photo){
                                         return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
                                             protect_content: true,
+                                            parse_mode:'HTML',
+
                                             caption: module_item?.message,
                                             ...Markup.inlineKeyboard([
                                                 findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
@@ -1026,6 +1038,8 @@ bot.on('callback_query', async (ctx) => {
                     if(module_item?.photo){
                         return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
                             protect_content: true,
+                            parse_mode:'HTML',
+
                             caption: module_item?.message,
                             ...Markup.inlineKeyboard([
                                 findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
@@ -1059,6 +1073,8 @@ bot.on('callback_query', async (ctx) => {
                     if(module_item?.photo){
                         return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
                             protect_content: true,
+                            parse_mode:'HTML',
+
                             caption: module_item?.message,
                             ...Markup.inlineKeyboard([
                                 findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
@@ -1360,6 +1376,8 @@ bot.on('callback_query', async (ctx) => {
                                     if(module_item?.photo){
                                         return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
                                             protect_content: true,
+                                            parse_mode:'HTML',
+
                                             caption: module_item?.message,
                                             ...Markup.inlineKeyboard([
                                                 findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
@@ -1393,6 +1411,8 @@ bot.on('callback_query', async (ctx) => {
                                     if(module_item?.photo){
                                         return ctx.sendPhoto({ source:`./uploads/module/${module_item?.photo}`},{
                                             protect_content: true,
+                                            parse_mode:'HTML',
+
                                             caption: module_item?.message,
                                             ...Markup.inlineKeyboard([
                                                 findUserProgress?.material ? [] : [Markup.button.callback(await getFillingText('get_module_file_button'), `get_module_file_button-${module_item?._id}`)],
