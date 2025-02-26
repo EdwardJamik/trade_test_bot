@@ -273,22 +273,38 @@ bot.on('text', async (ctx) => {
                     }
                 ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
             } else if (getMessageCode === 'info_button') {
-
                 ctx.deleteMessage().catch((e)=>{})
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
-                ctx.replyWithHTML(
-                    await getFillingText('info_menu_text'),{
-                        protect_content: true
-                    }
-                ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
+                ctx.sendPhoto('AgACAgIAAxkBAAIKAAFnvxALSMQjRGHGa-Ro0584eHT2l5QACDe0xG7hE-UmJuQNYJNOsCAEAAwIAA3kAAzYE',{
+                    protect_content: true,
+                    caption: await getFillingText('info_menu_text')
+                }).then(async (response) => {
+                    await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                }).catch(async (e) =>{
+                    ctx.replyWithHTML(
+                        await getFillingText('info_menu_text'),{
+                            protect_content: true
+                        }
+                    ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
+                });
             } else if (getMessageCode === 'catalog_button') {
                 ctx.deleteMessage().catch((e)=>{})
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
-                ctx.replyWithHTML(
-                    await getFillingText('catalog_menu_text'),{
-                        protect_content: true
-                    }
-                ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
+
+                ctx.sendPhoto('AgACAgIAAxkBAAIKAAFnvxALSMQjRGHGa-Ro0584eHTl5QACDe0xG7hE-UmJuQNYJNOsCAEAAwIAA3kAAzYE',{
+                    protect_content: true,
+                    caption: await getFillingText('catalog_menu_text')
+                }).then(async (response) => {
+                    await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                }).catch(async (e) =>{
+                    ctx.replyWithHTML(
+                        await getFillingText('catalog_menu_text'),{
+                            protect_content: true
+                        }
+                    ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
+                });
+
+
             }
             else if (getMessageCode === 'modules_button') {
                 ctx.deleteMessage().catch((e)=>{})
@@ -561,6 +577,8 @@ bot.on('photo', async (ctx) => {
         const chat_id = ctx.message.from.id;
         const userAction = await User.findOne({ chat_id })
         const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
+
+        console.log(ctx.message?.photo[3]?.file_id)
 
         if(callback === 'getPractical') {
             try {
