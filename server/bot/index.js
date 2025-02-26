@@ -145,7 +145,7 @@ bot.on('text', async (ctx) => {
     if(userAction){
         const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
 
-        if(ctx?.message?.chat?.id && ctx?.message?.chat?.id === -1002452517593){
+        if(ctx?.message?.chat?.id && ctx?.message?.chat?.id === -1002329684167){
 
             const text = ctx?.message?.reply_to_message?.text;
 
@@ -155,16 +155,16 @@ bot.on('text', async (ctx) => {
                 const practical = text.match(/practical:\s*([\w]+)/);
 
                 if (match && id && practical) {
-                    const chatId = match[1].trim(); // Видаляємо зайві пробіли
-                    const match_id = id[1].trim(); // Видаляємо зайві пробіли
-                    const match_practical = practical[1].trim(); // Видаляємо зайві пробіли
-                    const messageText = ctx.message.text; // Текст відповіді
+                    const chatId = match[1].trim();
+                    const match_id = id[1].trim();
+                    const match_practical = practical[1].trim();
+                    const messageText = ctx.message.text;
 
                     const findModule = await Module.findOne({_id: match_id})
 
                     const findProgress = await UserProgress.findOne({chat_id: chatId, module_id: match_id})
 
-                    let task_data = findProgress?.task_data || []; // Переконаємось, що це масив
+                    let task_data = findProgress?.task_data || [];
                     task_data[match_practical] = true;
 
                     let task = task_data.length > 0 && task_data.every(checkProgress => checkProgress === true);
@@ -182,7 +182,6 @@ bot.on('text', async (ctx) => {
                         await UserProgress.updateOne({chat_id: chatId, module_id: match_id}, {task_data, task})
                         ctx.deleteMessage().catch((e) => {
                         })
-                        console.log(await getLastMessage(chatId))
                         ctx.deleteMessage(chatId, await getLastMessage(chatId)).catch((e) => {
                         })
                         await ctx.reply(`Повідомлення надіслано до ${chatId}`);
@@ -296,8 +295,13 @@ bot.on('text', async (ctx) => {
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
 
                 const findModule = await Module.find({})
+                const findUserProgress = await UserProgress
+                    .findOne({ chat_id })
+                    .sort({ createdAt: -1 });
+                const findAllUserProgress = await UserProgress.find({chat_id})
 
-                if(findModule?.length){
+                if(findModule?.length !== findAllUserProgress?.length && !findUserProgress?.confirm || findModule?.length === findAllUserProgress?.length && !findUserProgress?.confirm){
+
                     let i = 0
                     for(const module_item of findModule){
 
@@ -398,13 +402,35 @@ bot.on('text', async (ctx) => {
 
                         }
                     }
+                } else {
+                    await ctx.replyWithHTML(
+                        await getFillingText('finish_module_info_text'),
+                        {
+                            protect_content: true,
+                            ... Markup.keyboard([
+                                [ await getFillingText('info_button'),await getFillingText('help_button')],
+                                [ await getFillingText('catalog_button'),await getFillingText('resources_button')],
+                                [ await getFillingText('personal_button')],
+                            ]).resize()
+                        }
+                    ).then(async (response) => {
+                        await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                    });
+                    await ctx.replyWithHTML(
+                        await getFillingText('finish_two_module_info_text'),
+                        {
+                            protect_content: true
+                        }
+                    ).then(async (response) => {
+                        await User.updateOne({ chat_id }, { last_two_message: response?.message_id, action: '' })
+                    });
                 }
             }
         }
     }
     // console.log(callback, callback_2, callback_3, callback_4)
 
-    //-1002452517593
+    //-1002329684167
 
 
 });
@@ -613,7 +639,7 @@ bot.on('callback_query', async (ctx) => {
                     if(findUserProgress?.task_data[Number(callback_3)-1]){
                         const message_id = findUserProgress?.task_data[Number(callback_3)-1].split(',');
                         const response = await ctx.telegram.sendMessage(
-                            '-1002452517593',
+                            '-1002329684167',
                             `Модуль: ${findModule?.title}\nUsername: @${getUser?.username ? getUser?.username : 'відсутній'} (${getUser?.first_name ? getUser?.first_name : ''} ${getUser?.last_name ? getUser?.last_name : ''}; ${getUser?.phone})\n\nchat_id: ${getUser?.chat_id} | module_id:${findModule?._id} | practical:${Number(callback_3)-1}`,
                             { parse_mode: 'HTML', protect_content: true }
                         );
@@ -621,7 +647,7 @@ bot.on('callback_query', async (ctx) => {
                         for(const message of message_id){
                             if(message)
                                 await ctx.telegram.forwardMessage(
-                                    '-1002452517593',
+                                    '-1002329684167',
                                     chat_id,
                                     message
                                 ).catch((e)=>{});
@@ -675,11 +701,37 @@ bot.on('callback_query', async (ctx) => {
                 break;
             }
             case 'decline_sent_module_practical': {
-                await ctx.telegram.forwardMessage(
-                    '-1002452517593',
-                    ctx.message.chat.id,
-                    ctx.message.message_id
-                );
+                ctx.deleteMessage().catch((e) => {})
+                ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
+                ctx.deleteMessage(await getLastTwoMessage(chat_id)).catch((e) => {})
+
+                const userAction = await User.findOne({ chat_id })
+
+                const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
+
+                const module_item = await Module.findOne({_id: callback_2})
+
+                const findPractical = await Practical.findOne({_id: module_item?.task_id[Number(callback_3)-1]})
+                const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
+
+                let task_data = findUserProgress?.task_data
+                task_data[Number(callback_3)-1] = ''
+
+                await UserProgress.updateOne({chat_id, module_id: callback_2},{task_data})
+
+                await ctx.replyWithHTML(
+                    findPractical?.message, {
+                        protect_content: true,
+                        ...Markup.inlineKeyboard([
+                            [Markup.button.callback(await getFillingText('sent_practical_task_button'), `send_practical-${callback_2}-${callback_3}`)],
+                            [Markup.button.callback(await getFillingText('back_to_main_module'), `back_to_main_module-${callback_2}`)],
+                        ]),
+
+                    }
+                ).then(async (response) => {
+                    await User.updateOne({chat_id}, {last_message: response?.message_id, action:''})
+                });
+
                 ctx.answerCbQuery('')
                 break;
             }
@@ -774,12 +826,12 @@ bot.on('callback_query', async (ctx) => {
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e)=>{})
 
                 const findModule = await Module.find({})
+                const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
+                const findAllUserProgress = await UserProgress.find({chat_id})
 
-                if(findModule?.length){
+                if(findModule?.length !== findAllUserProgress?.length && !findUserProgress?.confirm || findModule?.length === findAllUserProgress?.length && !findUserProgress?.confirm){
                     let i = 0
                     for(const module_item of findModule){
-
-                        const findUserProgress = await UserProgress.findOne({chat_id, module_id: module_item?._id})
 
                         if(findUserProgress?.confirm){
                             i++
@@ -891,6 +943,29 @@ bot.on('callback_query', async (ctx) => {
 
                         }
                     }
+                } else {
+                    await ctx.replyWithHTML(
+                        await getFillingText('finish_module_info_text'),
+                        {
+                            protect_content: true,
+                            ... Markup.keyboard([
+                                [ await getFillingText('info_button'),await getFillingText('help_button')],
+                                [ await getFillingText('catalog_button'),await getFillingText('resources_button')],
+                                [ await getFillingText('personal_button')],
+                            ]).resize()
+                        }
+                    ).then(async (response) => {
+                        await User.updateOne({ chat_id }, { last_message: response?.message_id, action: '' })
+                    });
+                    await ctx.replyWithHTML(
+                        await getFillingText('finish_two_module_info_text'),
+                        {
+                            protect_content: true
+                        }
+                    ).then(async (response) => {
+                        await User.updateOne({ chat_id }, { last_two_message: response?.message_id, action: '' })
+                    });
+
                 }
 
                 ctx.answerCbQuery('')
@@ -1348,13 +1423,14 @@ bot.on('callback_query', async (ctx) => {
 
                 ctx.deleteMessage().catch((e) => {})
                 ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
+                ctx.deleteMessage(await getLastTwoMessage(chat_id)).catch((e) => {})
 
                 const module_item = await Module.findOne({_id: callback_2})
 
 
                 const findPractical = await Practical.findOne({_id: module_item?.task_id[Number(callback_3)-1]})
 
-                ctx.replyWithHTML(
+                await ctx.replyWithHTML(
                     findPractical?.message, {
                         protect_content: true,
                         ...Markup.inlineKeyboard([
@@ -1374,9 +1450,13 @@ bot.on('callback_query', async (ctx) => {
             case 'send_practical': {
 
                 ctx.deleteMessage().catch((e) => {})
-                ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
+                // ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {})
 
                 const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
+                const findModule = await Module.findOne({_id: callback_2})
+
+                const findPractical = await Practical.findOne({_id: findModule?.task_id[Number(callback_3)-1]})
+
                 let task_data = []
 
                 if (findUserProgress?.task_data)
@@ -1387,7 +1467,15 @@ bot.on('callback_query', async (ctx) => {
 
                 await UserProgress.updateOne({chat_id, module_id: callback_2}, {task_data})
 
-                ctx.replyWithHTML(
+                await ctx.replyWithHTML(
+                    findPractical?.message, {
+                        protect_content: true
+                    }
+                ).then(async (response) => {
+                    await User.updateOne({chat_id}, {last_two_message: response?.message_id, action:''})
+                });
+
+                await ctx.replyWithHTML(
                 await getFillingText('success_sent_practical'), {
                         protect_content: true,
                         ...Markup.inlineKeyboard([
