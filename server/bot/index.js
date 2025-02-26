@@ -829,7 +829,7 @@ bot.on('callback_query', async (ctx) => {
                 const findUserProgress = await UserProgress.findOne({chat_id, module_id: callback_2})
                 const findAllUserProgress = await UserProgress.find({chat_id})
 
-                if(findModule?.length !== findAllUserProgress?.length && !findUserProgress?.confirm || findModule?.length === findAllUserProgress?.length && !findUserProgress?.confirm){
+                if(findModule?.length !== findAllUserProgress?.length || findModule?.length === findAllUserProgress?.length && !findUserProgress?.confirm){
                     let i = 0
                     for(const module_item of findModule){
 
