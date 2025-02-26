@@ -126,9 +126,9 @@ bot.on('contact', async (ctx) => {
     ctx.replyWithHTML(
         await getFillingText('text_start_module_info'),{
             protect_content: true,
-            ...Markup.inlineKeyboard([
-                [Markup.button.callback(await getFillingText('start_learning_button'), `start_learning_button`)]
-            ]),
+            // ...Markup.inlineKeyboard([
+            //     [Markup.button.callback(await getFillingText('start_learning_button'), `start_learning_button`)]
+            // ]),
         }
     ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
     //
