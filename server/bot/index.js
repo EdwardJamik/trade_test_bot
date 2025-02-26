@@ -145,7 +145,7 @@ bot.on('text', async (ctx) => {
     if(userAction){
         const [callback, callback_2, callback_3, callback_4] = userAction?.action?.split("-");
 
-        if(ctx?.message?.chat?.id && ctx?.message?.chat?.id === -1002329684167){
+        if(ctx?.message?.chat?.id && ctx?.message?.chat?.id === -1002452517593){
 
             const text = ctx?.message?.reply_to_message?.text;
 
@@ -430,7 +430,7 @@ bot.on('text', async (ctx) => {
     }
     // console.log(callback, callback_2, callback_3, callback_4)
 
-    //-1002329684167
+    //-1002452517593
 
 
 });
@@ -639,7 +639,7 @@ bot.on('callback_query', async (ctx) => {
                     if(findUserProgress?.task_data[Number(callback_3)-1]){
                         const message_id = findUserProgress?.task_data[Number(callback_3)-1].split(',');
                         const response = await ctx.telegram.sendMessage(
-                            '-1002329684167',
+                            '-1002452517593',
                             `Модуль: ${findModule?.title}\nUsername: @${getUser?.username ? getUser?.username : 'відсутній'} (${getUser?.first_name ? getUser?.first_name : ''} ${getUser?.last_name ? getUser?.last_name : ''}; ${getUser?.phone})\n\nchat_id: ${getUser?.chat_id} | module_id:${findModule?._id} | practical:${Number(callback_3)-1}`,
                             { parse_mode: 'HTML', protect_content: true }
                         );
@@ -647,7 +647,7 @@ bot.on('callback_query', async (ctx) => {
                         for(const message of message_id){
                             if(message)
                                 await ctx.telegram.forwardMessage(
-                                    '-1002329684167',
+                                    '-1002452517593',
                                     chat_id,
                                     message
                                 ).catch((e)=>{});
