@@ -30,9 +30,9 @@ bot.command('start', async (ctx) => {
             if(!userAction?.ban) {
                 ctx.deleteMessage().catch((e) => {
                 })
-                const getPhone = await getUserPhone({chat_id})
+                // const getPhone = await getUserPhone({chat_id})
 
-                if (getPhone) {
+                // if (getPhone) {
 
                     ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {
                     })
@@ -51,22 +51,22 @@ bot.command('start', async (ctx) => {
                     ).then(async (response) => {
                         await User.updateOne({chat_id}, {action: ''})
                     });
-                } else {
-
-                    ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {
-                    })
-
-                    ctx.replyWithHTML(
-                        await getFillingText('start'), {
-                            protect_content: true,
-                            ...Markup.keyboard([
-                                [Markup.button.contactRequest(await getFillingText('send_phone'))]
-                            ]).resize().oneTime()
-                        }
-                    ).then(async (response) => {
-                        await User.updateOne({chat_id}, {last_message: response?.message_id, action: ''})
-                    });
-                }
+                // } else {
+                //
+                //     ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {
+                //     })
+                //
+                //     ctx.replyWithHTML(
+                //         await getFillingText('start'), {
+                //             protect_content: true,
+                //             ...Markup.keyboard([
+                //                 [Markup.button.contactRequest(await getFillingText('send_phone'))]
+                //             ]).resize().oneTime()
+                //         }
+                //     ).then(async (response) => {
+                //         await User.updateOne({chat_id}, {last_message: response?.message_id, action: ''})
+                //     });
+                // }
             }
         } else {
             ctx.deleteMessage().catch((e)=>{})
