@@ -158,6 +158,13 @@ bot.on('contact', async (ctx) => {
         }
     ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
 
+    const video_id = await GeneralImage.findOne({})
+
+    if(video_id?.start_video)
+        await ctx.replyWithVideo(video_id?.start_video, {
+            protect_content: true,
+        })
+
     ctx.replyWithHTML(
         await getFillingText('text_start_module_info'),{
             protect_content: true,
