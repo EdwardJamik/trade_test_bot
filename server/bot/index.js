@@ -28,14 +28,21 @@ bot.command('start', async (ctx) => {
             const userAction = await User.findOne({ chat_id })
 
             if(!userAction?.ban) {
-                ctx.deleteMessage().catch((e) => {
-                })
+                ctx.deleteMessage().catch((e) => {})
                 // const getPhone = await getUserPhone({chat_id})
 
                 // if (getPhone) {
 
                     ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {
                     })
+
+                ctx.replyWithHTML(
+                    await getFillingText('start'), {
+                        protect_content: true
+                    }
+                ).then(async (response) => {
+                    await User.updateOne({chat_id}, {last_message: response?.message_id, action: ''})
+                });
 
                     ctx.replyWithHTML(
                         await getFillingText('module_message'), {
