@@ -772,19 +772,12 @@ bot.on('callback_query', async (ctx) => {
                     await ctx.replyWithHTML(
                         await getFillingText('phone_correct'), {
                             protect_content: true,
-                            ...Markup.inlineKeyboard([
-                                [Markup.button.callback(await getFillingText('next_step_button'), `step_three`)],
-                            ]),
                         }
                     ).then(async (response) => {
                         await User.updateOne({chat_id}, {
-                            last_message: response?.message_id,
                             action: ''
                         })
                     });
-                    break
-                }
-                case 'step_three':{
                     ctx.replyWithHTML(
                         await getFillingText('module_message'), {
                             protect_content: true,
@@ -802,8 +795,8 @@ bot.on('callback_query', async (ctx) => {
                             action: ''
                         })
                     });
+                    break
                 }
-
                 case 'disabled_change':
                     ctx.deleteMessage().catch((e) => {
                     })
