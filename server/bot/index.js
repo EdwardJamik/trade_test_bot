@@ -909,23 +909,23 @@ bot.on('callback_query', async (ctx) => {
                     if (findUserProgress && findModule) {
                         if (findUserProgress?.task_data[Number(callback_3) - 1]) {
                             const message_id = findUserProgress?.task_data[Number(callback_3) - 1].split(',');
-                            const response = await ctx.telegram.sendMessage(
-                                '-1002441707734',
-                                `Модуль: ${findModule?.title}\nUsername: @${getUser?.username ? getUser?.username : 'відсутній'} (${getUser?.first_name ? getUser?.first_name : ''} ${getUser?.last_name ? getUser?.last_name : ''}; ${getUser?.phone})\n\nchat_id: ${getUser?.chat_id} | module_id:${findModule?._id} | practical:${Number(callback_3) - 1}`,
-                                {parse_mode: 'HTML', protect_content: true}
-                            );
+                            // const response = await ctx.telegram.sendMessage(
+                            //     '-1002441707734',
+                            //     `Модуль: ${findModule?.title}\nUsername: @${getUser?.username ? getUser?.username : 'відсутній'} (${getUser?.first_name ? getUser?.first_name : ''} ${getUser?.last_name ? getUser?.last_name : ''}; ${getUser?.phone})\n\nchat_id: ${getUser?.chat_id} | module_id:${findModule?._id} | practical:${Number(callback_3) - 1}`,
+                            //     {parse_mode: 'HTML', protect_content: true}
+                            // );
 
-                            for (const message of message_id) {
-                                if (message)
-                                    await ctx.telegram.forwardMessage(
-                                        '-1002441707734',
-                                        chat_id,
-                                        message
-                                    ).catch((e) => {
-                                    });
-                            }
-
-                            await User.updateOne({chat_id}, {last_message: response?.message_id, action: ''});
+                            // for (const message of message_id) {
+                            //     if (message)
+                            //         await ctx.telegram.forwardMessage(
+                            //             '-1002441707734',
+                            //             chat_id,
+                            //             message
+                            //         ).catch((e) => {
+                            //         });
+                            // }
+                            //
+                            // await User.updateOne({chat_id}, {last_message: response?.message_id, action: ''});
                         }
                     }
 
