@@ -101,33 +101,16 @@ bot.command('start', async (ctx) => {
 
             await ctx.replyWithHTML(
                 await getFillingText('start'), {
-                    protect_content: true
-                }
-            ).then(async (response) => {
-                await User.updateOne({chat_id}, { action: ''})
-            });
-
-            await ctx.replyWithHTML(
-                await getFillingText('phone_correct'), {
-                    protect_content: true
-                }
-            ).then(async (response) => {
-                await User.updateOne({chat_id}, { action: ''})
-            });
-
-            ctx.replyWithHTML(
-                await getFillingText('module_message'), {
                     protect_content: true,
-                    ...Markup.keyboard([
-                        [await getFillingText('modules_button')],
-                        [await getFillingText('info_button'), await getFillingText('help_button')],
-                        [await getFillingText('catalog_button'), await getFillingText('resources_button')],
-                        [await getFillingText('personal_button')],
-                    ]).resize()
-
+                    ...Markup.inlineKeyboard([
+                        [Markup.button.callback(await getFillingText('next_step_button'), `step_two`)],
+                    ]),
                 }
             ).then(async (response) => {
-                await User.updateOne({chat_id}, {action: ''})
+                await User.updateOne({chat_id}, {
+                    last_message: response?.message_id,
+                    action: ''
+                })
             });
         }
     } catch (e) {
@@ -781,6 +764,46 @@ bot.on('callback_query', async (ctx) => {
 
         if(!userAction?.ban) {
             switch (callback) {
+                case 'step_two':{
+                    ctx.deleteMessage().catch((e) => {
+                    })
+                    ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {
+                    })
+                    await ctx.replyWithHTML(
+                        await getFillingText('phone_correct'), {
+                            protect_content: true,
+                            ...Markup.inlineKeyboard([
+                                [Markup.button.callback(await getFillingText('next_step_button'), `step_three`)],
+                            ]),
+                        }
+                    ).then(async (response) => {
+                        await User.updateOne({chat_id}, {
+                            last_message: response?.message_id,
+                            action: ''
+                        })
+                    });
+                    break
+                }
+                case 'step_three':{
+                    ctx.replyWithHTML(
+                        await getFillingText('module_message'), {
+                            protect_content: true,
+                            ...Markup.keyboard([
+                                [await getFillingText('modules_button')],
+                                [await getFillingText('info_button'), await getFillingText('help_button')],
+                                [await getFillingText('catalog_button'), await getFillingText('resources_button')],
+                                [await getFillingText('personal_button')],
+                            ]).resize()
+
+                        }
+                    ).then(async (response) => {
+                        await User.updateOne({chat_id}, {
+                            last_message: '',
+                            action: ''
+                        })
+                    });
+                }
+
                 case 'disabled_change':
                     ctx.deleteMessage().catch((e) => {
                     })
