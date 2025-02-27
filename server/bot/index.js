@@ -84,14 +84,28 @@ bot.command('start', async (ctx) => {
                 language
             })
 
+            // ctx.replyWithHTML(
+            //     await getFillingText('start'),{
+            //         protect_content: true,
+            //         ...Markup.keyboard([
+            //             [Markup.button.contactRequest(await getFillingText('send_phone'))]
+            //         ]).resize().oneTime()
+            //     }
+            // ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
             ctx.replyWithHTML(
-                await getFillingText('start'),{
+                await getFillingText('module_message'), {
                     protect_content: true,
                     ...Markup.keyboard([
-                        [Markup.button.contactRequest(await getFillingText('send_phone'))]
-                    ]).resize().oneTime()
+                        [await getFillingText('modules_button')],
+                        [await getFillingText('info_button'), await getFillingText('help_button')],
+                        [await getFillingText('catalog_button'), await getFillingText('resources_button')],
+                        [await getFillingText('personal_button')],
+                    ]).resize()
+
                 }
-            ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
+            ).then(async (response) => {
+                await User.updateOne({chat_id}, {action: ''})
+            });
         }
     } catch (e) {
         console.error(e)
