@@ -36,21 +36,21 @@ bot.command('start', async (ctx) => {
                     ctx.deleteMessage(await getLastMessage(chat_id)).catch((e) => {
                     })
 
-                await ctx.replyWithHTML(
-                    await getFillingText('start'), {
-                        protect_content: true
-                    }
-                ).then(async (response) => {
-                    await User.updateOne({chat_id}, { action: ''})
-                });
-
-                await ctx.replyWithHTML(
-                    await getFillingText('phone_correct'), {
-                        protect_content: true
-                    }
-                ).then(async (response) => {
-                    await User.updateOne({chat_id}, { action: ''})
-                });
+                // await ctx.replyWithHTML(
+                //     await getFillingText('start'), {
+                //         protect_content: true
+                //     }
+                // ).then(async (response) => {
+                //     await User.updateOne({chat_id}, { action: ''})
+                // });
+                //
+                // await ctx.replyWithHTML(
+                //     await getFillingText('phone_correct'), {
+                //         protect_content: true
+                //     }
+                // ).then(async (response) => {
+                //     await User.updateOne({chat_id}, { action: ''})
+                // });
 
                     ctx.replyWithHTML(
                         await getFillingText('module_message'), {
