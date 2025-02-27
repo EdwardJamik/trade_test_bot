@@ -99,14 +99,22 @@ bot.command('start', async (ctx) => {
                 language
             })
 
-            // ctx.replyWithHTML(
-            //     await getFillingText('start'),{
-            //         protect_content: true,
-            //         ...Markup.keyboard([
-            //             [Markup.button.contactRequest(await getFillingText('send_phone'))]
-            //         ]).resize().oneTime()
-            //     }
-            // ).then(async (response) => { await User.updateOne({ chat_id }, { last_message: response?.message_id, action:'' }) });
+            await ctx.replyWithHTML(
+                await getFillingText('start'), {
+                    protect_content: true
+                }
+            ).then(async (response) => {
+                await User.updateOne({chat_id}, { action: ''})
+            });
+
+            await ctx.replyWithHTML(
+                await getFillingText('phone_correct'), {
+                    protect_content: true
+                }
+            ).then(async (response) => {
+                await User.updateOne({chat_id}, { action: ''})
+            });
+
             ctx.replyWithHTML(
                 await getFillingText('module_message'), {
                     protect_content: true,
