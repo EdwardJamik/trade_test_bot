@@ -28,6 +28,9 @@ const moduleList = new mongoose.Schema({
     test_id:{
         type: String,
     },
+    link_module:{
+        type: String,
+    },
     task_id:{
         type: Array,
     },

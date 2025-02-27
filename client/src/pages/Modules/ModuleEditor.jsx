@@ -67,6 +67,7 @@ const ModuleEditor = () => {
                     task_id: data.module.task_id,
                     video: data.module.video,
                     date: dayjs(data.module.date),
+                    link_module: data.module.link_module
                 });
 
                 if (data.module.photo) {
@@ -256,7 +257,14 @@ const ModuleEditor = () => {
                     >
                         <TextArea rows={4}/>
                     </Form.Item>
-
+                    <h4>Посилання для практичних</h4>
+                    <Form.Item
+                        name="link_module"
+                        style={{width: '100%'}}
+                        rules={[{required: true, message: "Посилання для практичних"}]}
+                    >
+                        <Input/>
+                    </Form.Item>
                     <h4>Оберіть тестування для модуля</h4>
                     <Form.Item name='test_id'>
                         <Select

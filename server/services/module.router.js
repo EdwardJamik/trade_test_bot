@@ -44,7 +44,7 @@ router.post("/create", upload.fields([
         return res.status(400).json({error: "Файли не завантажено"});
     }
 
-    const {title, date, message, test_id, task_id, video} = req.body;
+    const {title, date, message, test_id, link_module, task_id, video} = req.body;
 
     const photo = req.files["photo"] ? req.files["photo"].map(file => `${file.filename}`) : []
     const other_files = req.files["other_file"] ? req.files["other_file"].map(file => `${file.filename}`) : []
@@ -52,7 +52,7 @@ router.post("/create", upload.fields([
     const arrayTask = task_id.split(',')
     const arrayVideo = video.split(',');
 
-    const createModule = await Module.create({title, date, message, test_id, video:arrayVideo, task_id:arrayTask, photo: photo[0], other_files })
+    const createModule = await Module.create({title, date, message, test_id, video:arrayVideo, task_id:arrayTask, link_module, photo: photo[0], other_files })
 
     const response = {
         success: true,
@@ -103,7 +103,7 @@ router.post("/update/:id", upload.fields([
     { name: "other_file", maxCount: 10 }
 ]), async (req, res) => {
     try {
-        const { title, date, message, test_id, video, task_id, existing_photo, existing_files } = req.body;
+        const { title, date, message, link_module, test_id, video, task_id, existing_photo, existing_files } = req.body;
 
         const currentModule = await Module.findById(req.params.id);
         if (!currentModule) {
@@ -158,6 +158,7 @@ router.post("/update/:id", upload.fields([
                 test_id,
                 video: arrayVideo,
                 task_id: arrayTask,
+                link_module,
                 photo,
                 other_files
             },

@@ -65,7 +65,7 @@ cron.schedule('* * * * *', async () => {
             $lte: oneHourAgo,
             $gt: twentyFourHoursAgo
         },
-        confirm: false,
+        test: false,
         remind_1h: false
     });
 
@@ -73,7 +73,7 @@ cron.schedule('* * * * *', async () => {
         updatedAt: {
             $lte: twentyFourHoursAgo
         },
-        confirm: false,
+        test: false,
         remind_24h: false
     });
 
