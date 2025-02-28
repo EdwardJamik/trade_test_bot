@@ -60,7 +60,7 @@ bot.command('start', async (ctx) => {
                                 [await getFillingText('info_button'), await getFillingText('help_button')],
                                 [await getFillingText('catalog_button'), await getFillingText('resources_button')],
                                 [await getFillingText('personal_button')],
-                            ]).resize()
+                            ]).oneTime().resize()
 
                         }
                     ).then(async (response) => {
@@ -505,7 +505,7 @@ bot.on('text', async (ctx) => {
                                 [await getFillingText('info_button'), await getFillingText('help_button')],
                                 [await getFillingText('catalog_button'), await getFillingText('resources_button')],
                                 [await getFillingText('personal_button')],
-                            ]).resize()
+                            ]).oneTime().resize()
                         }
                     ).then(async (response) => {
                         await User.updateOne({chat_id}, {action: ''})
@@ -786,7 +786,7 @@ bot.on('callback_query', async (ctx) => {
                                 [await getFillingText('info_button'), await getFillingText('help_button')],
                                 [await getFillingText('catalog_button'), await getFillingText('resources_button')],
                                 [await getFillingText('personal_button')],
-                            ]).resize()
+                            ]).oneTime().resize()
 
                         }
                     ).then(async (response) => {
@@ -1124,7 +1124,7 @@ bot.on('callback_query', async (ctx) => {
                                     [await getFillingText('info_button'), await getFillingText('help_button')],
                                     [await getFillingText('catalog_button'), await getFillingText('resources_button')],
                                     [await getFillingText('personal_button')],
-                                ]).resize()
+                                ]).oneTime().resize()
                             })
                         }
                     }
@@ -1333,7 +1333,7 @@ bot.on('callback_query', async (ctx) => {
                                     [await getFillingText('info_button'), await getFillingText('help_button')],
                                     [await getFillingText('catalog_button'), await getFillingText('resources_button')],
                                     [await getFillingText('personal_button')],
-                                ]).resize()
+                                ]).oneTime().resize()
                             }
                         ).then(async (response) => {
                             await User.updateOne({chat_id}, {action: ''})
@@ -1961,7 +1961,7 @@ bot.on('callback_query', async (ctx) => {
                                 [await getFillingText('info_button'), await getFillingText('help_button')],
                                 [await getFillingText('catalog_button'), await getFillingText('resources_button')],
                                 [await getFillingText('personal_button')],
-                            ]).resize()
+                            ]).oneTime().resize()
 
                         }
                     ).then(async (response) => {
